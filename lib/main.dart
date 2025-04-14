@@ -1,4 +1,5 @@
 import 'package:delivery_apps/view/home/home_screen.dart';
+import 'package:delivery_apps/view/login/signup_view.dart';
 import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
 import 'package:delivery_apps/view/on_boading/startup_view.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home:  ButtomNavigation(),
+      home:  HomeScreen(),
     );
   }
 }

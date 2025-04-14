@@ -49,15 +49,12 @@ class _ButtomNavigationState extends State<ButtomNavigation> {
           _buildNavItem(Icons.home_outlined, 0, highlightColor: TColor.main),
           _buildNavItem(Icons.shopping_cart_outlined, 1,
               highlightColor: TColor.main),
-          // Example: green for cart
           _buildNavItem(Icons.favorite_outline, 2, highlightColor: TColor.main),
           _buildNavItem(Icons.list_alt, 3, highlightColor: TColor.main),
           _buildNavItem(Icons.person, 4, highlightColor: TColor.main),
         ],
         backgroundColor: Colors.transparent,
-        // Make the background transparent to match the body
         color: TColor.textfield,
-        // Background color of the bar
         animationDuration: const Duration(milliseconds: 500),
         onTap: (int index) {
           setState(() {
@@ -70,7 +67,6 @@ class _ButtomNavigationState extends State<ButtomNavigation> {
     );
   }
 
-  // Helper method to build each navigation item
   Widget _buildNavItem(IconData icon, int index,
       {Color highlightColor = Colors.blue}) {
     bool isSelected = currentIndex == index;

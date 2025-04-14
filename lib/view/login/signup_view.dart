@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:delivery_apps/common/color_extention.dart';
 import 'package:delivery_apps/common_widget/big_text.dart';
 import 'package:delivery_apps/common_widget/normal_text.dart';
@@ -17,18 +18,48 @@ class SignUpView extends StatefulWidget {
 }
 
 class _SignUpViewState extends State<SignUpView> {
-  String userName = "", email = "", password = "", confirmPassword = "";
+  String userName = "",
+      email = "",
+      password = "",
+      confirmPassword = "",
+      phone = "",
+  errorMessage = "";
   TextEditingController userNameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
-  Registration() async {
+  final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
+
+  Future<String> _generateUserId() async {
+    QuerySnapshot snapshot = await _firebaseFirestore.collection("users").get();
+    int userCount = snapshot.docs.length + 1;
+    return "user$userCount";
+  }
+
+
+  Future<void> Registration() async {
+    setState(() {
+      errorMessage = "";
+    });
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
+      String uid =userCredential.user!.uid;
+      String userID =await _generateUserId();
+
+      _firebaseFirestore.collection("users").doc(userID).set({
+        "id": uid,
+        "name": userName,
+        "email": email,
+        "phone": phone,
+        "password": password,
+        "createAt": Timestamp.now()
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: NormalText(
@@ -40,20 +71,29 @@ class _SignUpViewState extends State<SignUpView> {
           context, MaterialPageRoute(builder: (context) => HomeScreen()));
     } on FirebaseException catch (e) {
       debugPrint("Signup error: ${e.code}");
-      if (e.code == 'weak-password') {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            backgroundColor: Colors.red,
-            content: NormalText(
-                color: TColor.primaryText,
-                txt: "Password provided is to weak")));
-      } else if (e.code == 'email-already-in-use') {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            backgroundColor: Colors.red,
-            content: NormalText(
-                color: TColor.primaryText, txt: "Account already exsists")));
+
+      String errorMsg;
+
+      switch (e.code) {
+        case 'weak-password':
+          errorMsg = "Password provided is too weak.";
+          break;
+        case 'email-already-in-use':
+          errorMsg = "Account already exists.";
+          break;
+        case 'invalid-email':
+          errorMsg = "The email address is not valid.";
+          break;
+        default:
+          errorMsg = "An error occurred: ${e.message}";
+          break;
       }
+
+      setState(() {
+        errorMessage = errorMsg;
+      });
     }
-    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +159,16 @@ class _SignUpViewState extends State<SignUpView> {
                 const SizedBox(
                   height: 15,
                 ),
+                NormalTextBold(color: TColor.primary, txt: "Phone Number"),
+                RoundTextField(
+                  validator: (value){
+                    if(value == null || value.isEmpty){
+                      return 'please enter your phone number';
+                    }
+                    return null;
+                  },
+                    hint: "Enter your phone number",
+                    obscureText: false, sufIcon: false,),
                 NormalTextBold(color: TColor.primary, txt: "Password"),
                 RoundTextField(
                   textEditingController: passwordController,
@@ -141,8 +191,8 @@ class _SignUpViewState extends State<SignUpView> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter confirm password';
-                    }else if(value != passwordController.text){
-                      return'Password Do Not Match';
+                    } else if (value != passwordController.text) {
+                      return 'Password Do Not Match';
                     }
                     return null;
                   },
@@ -150,7 +200,18 @@ class _SignUpViewState extends State<SignUpView> {
                   obscureText: true,
                   sufIcon: true,
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 5),
+                if (errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
                 RoundButton(
                     txt: NormalTextBold(color: Colors.white, txt: "Register"),
                     color: TColor.main,
@@ -169,7 +230,7 @@ class _SignUpViewState extends State<SignUpView> {
                 Row(
                   children: [
                     NormalText(
-                        color: TColor.primary, txt: "Aready have an account? "),
+                        color: TColor.primary, txt: "Aready have an account ? "),
                     TextButton(
                         onPressed: () {
                           Navigator.push(
@@ -179,7 +240,7 @@ class _SignUpViewState extends State<SignUpView> {
                         },
                         child: Text(
                           "Login",
-                          style: TextStyle(color: TColor.main,fontSize: 20),
+                          style: TextStyle(color: TColor.main, fontSize: 20),
                         ))
                   ],
                 )

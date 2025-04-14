@@ -21,13 +21,16 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   String email = "", password = "";
-
+  String errorMessage = "";
   final _formKey = GlobalKey<FormState>();
 
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  UserLogin() async {
+  Future<void> UserLogin() async {
+    setState(() {
+      errorMessage = "";
+    });
     try {
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
@@ -35,16 +38,33 @@ class _LoginViewState extends State<LoginView> {
           context, MaterialPageRoute(builder: (context) => HomeScreen()));
     } on FirebaseAuthException catch (e) {
       debugPrint("Login error: ${e.code}");
-      if (e.code == 'user-not-found') {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: NormalText(
-                color: TColor.primary, txt: "No User Found For This Email")));
-      } else if (e.code == 'wrong-password') {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: NormalText(
-                color: TColor.primary,
-                txt: "Wrong Password Provided By User")));
+
+      String errorMsg;
+
+      switch (e.code) {
+        case 'invalid-credential':
+          errorMsg = "Invalid email or password. Please try again.";
+          break;
+        case 'user-not-found':
+          errorMsg = "No user found for this email.";
+          break;
+        case 'wrong-password':
+          errorMsg = "Wrong password provided.";
+          break;
+        case 'invalid-email':
+          errorMsg = "The email address is not valid.";
+          break;
+        case 'user-disabled':
+          errorMsg = "This user account has been disabled.";
+          break;
+        default:
+          errorMsg = "An error occurred: ${e.message}";
+          break;
       }
+
+      setState(() {
+        errorMessage = errorMsg;
+      });
     }
   }
 
@@ -182,6 +202,17 @@ class _LoginViewState extends State<LoginView> {
                       preicon: Icon(Icons.lock_outlined),
                       sufIcon: true,
                     ),
+                    if (errorMessage.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        child: Text(
+                          errorMessage,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                     Align(
                       alignment: Alignment.topRight,
                       child: TextButton(
@@ -204,7 +235,6 @@ class _LoginViewState extends State<LoginView> {
                           });
                           UserLogin();
                         }
-
                       },
                     ),
                     const SizedBox(
