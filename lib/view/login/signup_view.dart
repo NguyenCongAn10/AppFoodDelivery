@@ -5,7 +5,7 @@ import 'package:delivery_apps/common_widget/normal_text.dart';
 import 'package:delivery_apps/common_widget/normal_text_bold.dart';
 import 'package:delivery_apps/common_widget/round_button.dart';
 import 'package:delivery_apps/common_widget/round_textfield.dart';
-import 'package:delivery_apps/view/home/home_screen.dart';
+import 'package:delivery_apps/view/main_tabview/home_screen.dart';
 import 'package:delivery_apps/view/login/login_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

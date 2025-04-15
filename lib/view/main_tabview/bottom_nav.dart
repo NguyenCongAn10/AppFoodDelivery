@@ -1,10 +1,10 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:delivery_apps/common/color_extention.dart';
-import 'package:delivery_apps/view/home/cart_screen.dart';
-import 'package:delivery_apps/view/home/favourite_screen.dart';
-import 'package:delivery_apps/view/home/home_screen.dart';
-import 'package:delivery_apps/view/home/orders_screen.dart';
-import 'package:delivery_apps/view/home/profile_screen.dart';
+import 'package:delivery_apps/view/main_tabview/cart_screen.dart';
+import 'package:delivery_apps/view/main_tabview/favourite_screen.dart';
+import 'package:delivery_apps/view/main_tabview/home_screen.dart';
+import 'package:delivery_apps/view/main_tabview/orders_screen.dart';
+import 'package:delivery_apps/view/main_tabview/profile_screen.dart';
 import 'package:flutter/material.dart';
 
 class ButtomNavigation extends StatefulWidget {
