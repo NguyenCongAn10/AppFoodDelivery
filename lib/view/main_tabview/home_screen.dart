@@ -1,9 +1,12 @@
 import 'package:delivery_apps/common/color_extention.dart';
+import 'package:delivery_apps/common_widget/big_text.dart';
 import 'package:delivery_apps/common_widget/normal_text.dart';
 import 'package:delivery_apps/common_widget/normal_text_bold.dart';
 import 'package:delivery_apps/common_widget/round_textfield.dart';
 import 'package:delivery_apps/view/home/banner_slider.dart';
+import 'package:delivery_apps/view/home/categories_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:sqflite/utils/utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,6 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Padding(
           padding: const EdgeInsets.all(15),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
@@ -62,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 20,
               ),
               BannerSlider(),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               Row(
@@ -81,7 +86,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ))
                 ],
               ),
+              CategoriesSlider(),
+              SizedBox(height: 20,),
 
+              NormalTextBold(color: TColor.primary, txt: "Top Picks",)
             ],
           ),
         ),
