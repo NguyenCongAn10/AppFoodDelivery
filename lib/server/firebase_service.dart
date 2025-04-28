@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../model/category.dart';
+
 class FirebaseService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
@@ -8,34 +10,39 @@ class FirebaseService {
   Future<User?> createUser(String email, String password, String name) async {
     try {
       UserCredential userCredential = await _firebaseAuth
-          .createUserWithEmailAndPassword(email: email,
-          password: password);
+          .createUserWithEmailAndPassword(email: email, password: password);
       User? user = userCredential.user;
-      if(user != null){
-        await _firebaseFirestore.collection("user").doc(user.uid).set({
-          "uid" : user.uid,
-          "email"  : email,
-          "name" : name,
-          "creatAt": FieldValue.serverTimestamp(),
-
+      if (user != null) {
+        await _firebaseFirestore.collection("users").doc(user.uid).set({
+          "uid": user.uid,
+          "email": email,
+          "name": name,
+          "createdAt": FieldValue.serverTimestamp(),
         });
+        return user; // Return the created user
       }
-    } catch(e) {
-      throw Exception('Error creating user: $e');
-
+      return null;
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Error creating user: ${e.message}');
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
     }
   }
 
-  Future<String> getCategories( )async{
-    try{
-      QuerySnapshot querySnapshot = await _firebaseFirestore.collection("categories").get();
-          return querySnapshot.docs.map((doc)=>{
-            "id": doc.id,
-            ...doc.data() as Map<String,dynamic>,
-          }).toString();
-    }catch(e){
-      throw Exception('Error fetching categories: $e');
+  Future<List<Category>> getCategories() async {
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection("categoires").get();
+      if (snapshot.docs.isEmpty) {
+        print("khong co danh muc nao");
+        return [];
+      }
+      return snapshot.docs
+          .map((doc) => Category.fromFireStore(doc.data()))
+          .toList();
+    } catch (e) {
+      print("loi khi lay danh muc $e");
+      return [];
     }
   }
-
 }
