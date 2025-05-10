@@ -5,6 +5,7 @@ import 'package:delivery_apps/common_widget/normal_text_bold.dart';
 import 'package:delivery_apps/common_widget/round_textfield.dart';
 import 'package:delivery_apps/view/home/banner_slider.dart';
 import 'package:delivery_apps/view/home/categories_slider.dart';
+import 'package:delivery_apps/view/home/product_home.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/utils/utils.dart';
 
@@ -76,7 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Spacer(),
                   TextButton(
                       style: ButtonStyle(
-                          overlayColor: MaterialStateProperty.all(Colors.transparent),
+                          overlayColor:
+                              MaterialStateProperty.all(Colors.transparent),
                           splashFactory: NoSplash.splashFactory),
                       onPressed: () {},
                       child: NormalText(
@@ -86,10 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ))
                 ],
               ),
-              CategoriesSlider(),
-              SizedBox(height: 20,),
-
-              NormalTextBold(color: TColor.primary, txt: "Top Picks",)
+              ProductHome(),
             ],
           ),
         ),
