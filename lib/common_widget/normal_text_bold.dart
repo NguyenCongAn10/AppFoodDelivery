@@ -7,8 +7,11 @@ class NormalTextBold extends StatelessWidget {
   TextOverflow overflow;
 
   NormalTextBold(
-      {super.key, required this.color, required this.txt, this.overflow = TextOverflow
-          .ellipsis, this.size = 20});
+      {super.key,
+      required this.color,
+      required this.txt,
+      this.overflow = TextOverflow.ellipsis,
+      this.size = 20});
 
   @override
   Widget build(BuildContext context) {
@@ -16,10 +19,11 @@ class NormalTextBold extends StatelessWidget {
       txt,
       overflow: overflow,
       style: TextStyle(
-          fontFamily: "Metropolis",
-          color: color,
-          fontWeight: FontWeight.w600,
-          fontSize: size,),
+        fontFamily: "Metropolis",
+        color: color,
+        fontWeight: FontWeight.bold,
+        fontSize: size,
+      ),
     );
   }
 }

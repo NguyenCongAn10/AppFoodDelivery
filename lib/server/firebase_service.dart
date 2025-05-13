@@ -65,17 +65,24 @@ class FirebaseService {
   }
 
   Future<void> updateFavoriteStatus(
-      String categoryId, String productId, bool favorite) async {
+      String categoryId, String productId, bool isCurrentlyFavorite) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    final productRef = FirebaseFirestore.instance
+        .collection("categoires")
+        .doc(categoryId)
+        .collection("product")
+        .doc(productId);
+
     try {
-      print("Truy vấn Firestore: categoires/$categoryId/product/$productId");
-      await FirebaseFirestore.instance
-          .collection("categoires")
-          .doc(categoryId)
-          .collection("product")
-          .doc(productId)
-          .update({"favourite": favorite});
+      await productRef.update({
+        'isFavorite': isCurrentlyFavorite
+            ? FieldValue.arrayRemove([userId])
+            : FieldValue.arrayUnion([userId])
+      });
     } catch (e) {
-      throw Exception("Lỗi khi cập nhật trạng thái yêu thích  $e");
+      throw Exception("Lỗi khi cập nhật isFavorite: $e");
     }
   }
 }

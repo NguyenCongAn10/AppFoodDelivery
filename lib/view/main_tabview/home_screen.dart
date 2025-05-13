@@ -4,7 +4,6 @@ import 'package:delivery_apps/common_widget/normal_text_bold.dart';
 import 'package:delivery_apps/common_widget/round_textfield.dart';
 import 'package:delivery_apps/view/home/banner_slider.dart';
 import 'package:delivery_apps/view/home/product_home.dart';
-import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {

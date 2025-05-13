@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 
-class RoundButtonIcon extends StatelessWidget {
+class RoundIconButtonLogin extends StatelessWidget {
   final Widget txt;
   final Color color;
   Image image;
   final bool shadow;
   final VoidCallback onpress;
 
-  RoundButtonIcon(
+  RoundIconButtonLogin(
       {super.key,
-        required this.txt,
-        required this.color,
-        required this.image,
-        required this.shadow, required this.onpress}) {
-
-  }
+      required this.txt,
+      required this.color,
+      required this.image,
+      required this.shadow,
+      required this.onpress});
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +25,13 @@ class RoundButtonIcon extends StatelessWidget {
           borderRadius: BorderRadius.circular(30),
           boxShadow: shadow
               ? [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 6,
-              spreadRadius: 2,
-              offset: const Offset(0, 4),
-            )
-          ]
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 6,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 4),
+                  )
+                ]
               : [],
           color: color,
         ),
@@ -45,7 +44,9 @@ class RoundButtonIcon extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 35),
                 child: image,
               ),
-              const SizedBox(width: 10,),
+              const SizedBox(
+                width: 10,
+              ),
               txt
             ],
           ),
