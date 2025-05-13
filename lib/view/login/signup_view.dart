@@ -23,7 +23,7 @@ class _SignUpViewState extends State<SignUpView> {
       password = "",
       confirmPassword = "",
       phone = "",
-  errorMessage = "";
+      errorMessage = "";
   TextEditingController userNameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -40,7 +40,6 @@ class _SignUpViewState extends State<SignUpView> {
     return "user$userCount";
   }
 
-
   Future<void> Registration() async {
     setState(() {
       errorMessage = "";
@@ -48,8 +47,8 @@ class _SignUpViewState extends State<SignUpView> {
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
-      String uid =userCredential.user!.uid;
-      String userID =await _generateUserId();
+      String uid = userCredential.user!.uid;
+      String userID = await _generateUserId();
 
       _firebaseFirestore.collection("users").doc(userID).set({
         "id": uid,
@@ -161,14 +160,16 @@ class _SignUpViewState extends State<SignUpView> {
                 ),
                 NormalTextBold(color: TColor.primary, txt: "Phone Number"),
                 RoundTextField(
-                  validator: (value){
-                    if(value == null || value.isEmpty){
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
                       return 'please enter your phone number';
                     }
                     return null;
                   },
-                    hint: "Enter your phone number",
-                    obscureText: false, sufIcon: false,),
+                  hint: "Enter your phone number",
+                  obscureText: false,
+                  sufIcon: false,
+                ),
                 NormalTextBold(color: TColor.primary, txt: "Password"),
                 RoundTextField(
                   textEditingController: passwordController,
@@ -200,7 +201,7 @@ class _SignUpViewState extends State<SignUpView> {
                   obscureText: true,
                   sufIcon: true,
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 15),
                 if (errorMessage.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5),
@@ -216,7 +217,7 @@ class _SignUpViewState extends State<SignUpView> {
                     txt: NormalTextBold(color: Colors.white, txt: "Register"),
                     color: TColor.main,
                     onpress: () async {
-                      print("Register button pressed"); // <-- thêm dòng này
+                      print("Register button pressed");
                       if (_formKey.currentState!.validate()) {
                         setState(() {
                           email = emailController.text;
@@ -230,7 +231,8 @@ class _SignUpViewState extends State<SignUpView> {
                 Row(
                   children: [
                     NormalText(
-                        color: TColor.primary, txt: "Aready have an account ? "),
+                        color: TColor.primary,
+                        txt: "Aready have an account ? "),
                     TextButton(
                         onPressed: () {
                           Navigator.push(

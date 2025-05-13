@@ -4,7 +4,7 @@ import 'package:delivery_apps/common_widget/normal_text.dart';
 import 'package:delivery_apps/common_widget/normal_text_bold.dart';
 import 'package:delivery_apps/common_widget/round_button.dart';
 import 'package:delivery_apps/common_widget/round_textfield.dart';
-import 'package:delivery_apps/view/main_tabview/home_screen.dart';
+import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
 import 'package:delivery_apps/view/login/signup_view.dart';
 import 'package:delivery_apps/view/login/welcom_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -35,7 +35,7 @@ class _LoginViewState extends State<LoginView> {
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => HomeScreen()));
+          context, MaterialPageRoute(builder: (context) => ButtomNavigation()));
     } on FirebaseAuthException catch (e) {
       debugPrint("Login error: ${e.code}");
 

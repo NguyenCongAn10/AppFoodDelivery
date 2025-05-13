@@ -1,5 +1,4 @@
 import 'package:delivery_apps/common/color_extention.dart';
-import 'package:delivery_apps/common_widget/big_text.dart';
 import 'package:delivery_apps/common_widget/normal_text.dart';
 import 'package:delivery_apps/common_widget/normal_text_bold.dart';
 import 'package:delivery_apps/model/product.dart';
@@ -15,79 +14,170 @@ class ProductHome extends StatefulWidget {
 }
 
 class _ProductHomeState extends State<ProductHome> {
+  final FirebaseService _firebaseService = FirebaseService();
+  List<Product> products = [];
+  String selectedCategory = "cat1";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    print("Đang tải sản phẩm cho danh mục: $selectedCategory");
+    try {
+      final loadedProducts =
+          await _firebaseService.getProductByCategory(selectedCategory);
+      print("Số sản phẩm tải được: ${loadedProducts.length}");
+      setState(() {
+        products = loadedProducts;
+      });
+    } catch (e) {
+      print("Lỗi khi tải sản phẩm: $e");
+      setState(() {
+        products = [];
+      });
+    }
+  }
+
+  void _toggleFavorite(Product product) async {
+    setState(() {
+      product.favourite = !product.favourite;
+    });
+    try {
+      await _firebaseService.updateFavoriteStatus(
+          selectedCategory, product.id, product.favourite);
+      print("Cập nhật trạng thái thành công cho sản phẩm: ${product.id}");
+    } catch (e) {
+      print("Lỗi khi cập nhật trạng thái yêu thích: $e");
+    }
+  }
+
+  void _onCategorySelected(String categoryId) {
+    setState(() {
+      selectedCategory = categoryId;
+    });
+    _loadProducts();
+  }
+
   @override
   Widget build(BuildContext context) {
-    FirebaseService _firebaseService = FirebaseService();
-    List<Product> products = [];
-    String selectedCategory = "cat1";
     var media = MediaQuery.of(context).size;
-
-    Future<void> _loadProducts() async {
-      print("Đang tải sản phẩm cho danh mục: $selectedCategory");
-      try {
-        final loadedProducts =
-            await _firebaseService.getProductByCategory(selectedCategory);
-        print("Số sản phẩm tải được: ${loadedProducts.length}");
-        setState(() {
-          products = loadedProducts;
-        });
-      } catch (e) {
-        print("Lỗi khi tải sản phẩm: $e");
-        setState(() {
-          products = [];
-        });
-      }
-    }
-
-    @override
-    void initState() {
-      super.initState();
-      _loadProducts();
-    }
-
-    void _onCategorySelected(String categoryId) {
-      setState(() {
-        selectedCategory = categoryId;
-      });
-      _loadProducts();
-    }
-
     return Column(children: [
-      CategoriesSlider(onCategorySlected: _onCategorySelected),
-      SizedBox(
-        height: 20,
-      ),
+      CategoriesSlider(onCategorySelected: _onCategorySelected),
+      const SizedBox(height: 20),
       Row(
         children: [
           NormalTextBold(color: TColor.primary, txt: "Top Picks"),
-          Spacer(),
+          const Spacer(),
           IconButton(
-              onPressed: () {}, icon: Icon(Icons.arrow_forward_ios_rounded))
+              onPressed: () {},
+              icon: const Icon(Icons.arrow_forward_ios_rounded))
         ],
       ),
-      products.isEmpty
-          ? Center(
-              child:
-                  NormalText(color: Colors.red, txt: "Khong co san pham nao"),
-            )
-          : GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      Container(
+        width: media.width,
+        height: 180,
+        child: products.isEmpty
+            ? Center(
+                child:
+                    NormalText(color: Colors.red, txt: "Không có sản phẩm nào"),
+              )
+            : GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.8,
+                  childAspectRatio: 1,
                   crossAxisSpacing: 8,
-                  mainAxisExtent: 8),
-              itemCount: products.length,
-              itemBuilder: (context, index) {
-                return Card(
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  final product = products[index];
+                  return Card(
                     color: Colors.grey[200],
                     child: Padding(
-                      padding: EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(8),
                       child: Column(
-                        children: [Container()],
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Stack(alignment: Alignment.topRight, children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.network(
+                                product.imageUrl,
+                                height: 100,
+                                width: 180,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(Icons.error, size: 50);
+                                },
+                              ),
+                            ),
+                            Container(
+                              width: 25,
+                              height: 25,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15)),
+                              child: IconButton(
+                                onPressed: () {
+                                  _toggleFavorite(product);
+                                },
+                                icon: Icon(Icons.favorite),
+                                padding: EdgeInsets.zero,
+                                color: product.favourite
+                                    ? Colors.red
+                                    : Colors.grey,
+                                iconSize: 20,
+                              ),
+                            )
+                          ]),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              NormalTextBold(
+                                color: TColor.primary,
+                                txt: product.name,
+                                size: 15,
+                              ),
+                              Spacer(),
+                              Container(
+                                width: 25,
+                                height: 25,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: TColor.main,
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: IconButton(
+                                  onPressed: () {},
+                                  padding: EdgeInsets.zero,
+                                  icon: Icon(Icons.add),
+                                  color: Colors.white,
+                                  iconSize: 20,
+                                ),
+                              )
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Align(
+                            alignment: Alignment.topLeft,
+                            child: NormalTextBold(
+                              color: TColor.secondaryText,
+                              txt: "\$${product.price}",
+                              size: 15,
+                            ),
+                          ),
+                        ],
                       ),
-                    ));
-              },
-            )
+                    ),
+                  );
+                },
+              ),
+      ),
     ]);
   }
 }

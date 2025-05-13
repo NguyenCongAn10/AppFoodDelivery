@@ -1,13 +1,11 @@
 import 'package:delivery_apps/common/color_extention.dart';
-import 'package:delivery_apps/common_widget/big_text.dart';
 import 'package:delivery_apps/common_widget/normal_text.dart';
 import 'package:delivery_apps/common_widget/normal_text_bold.dart';
 import 'package:delivery_apps/common_widget/round_textfield.dart';
 import 'package:delivery_apps/view/home/banner_slider.dart';
-import 'package:delivery_apps/view/home/categories_slider.dart';
 import 'package:delivery_apps/view/home/product_home.dart';
+import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
 import 'package:flutter/material.dart';
-import 'package:sqflite/utils/utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

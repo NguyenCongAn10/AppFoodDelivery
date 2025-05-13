@@ -51,7 +51,7 @@ class _ButtomNavigationState extends State<ButtomNavigation> {
               highlightColor: TColor.main),
           _buildNavItem(Icons.favorite_outline, 2, highlightColor: TColor.main),
           _buildNavItem(Icons.list_alt, 3, highlightColor: TColor.main),
-          _buildNavItem(Icons.person, 4, highlightColor: TColor.main),
+          _buildNavItem(Icons.person_outline, 4, highlightColor: TColor.main),
         ],
         backgroundColor: Colors.transparent,
         color: TColor.textfield,
@@ -75,14 +75,11 @@ class _ButtomNavigationState extends State<ButtomNavigation> {
       height: 40,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isSelected
-            ? highlightColor
-            : Colors.transparent,
+        color: isSelected ? highlightColor : Colors.transparent,
       ),
       child: Icon(
         icon,
         color: isSelected ? Colors.white : Colors.black87,
-
         size: 28,
       ),
     );

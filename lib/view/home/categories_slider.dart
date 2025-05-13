@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import '../../common/color_extention.dart';
 
 class CategoriesSlider extends StatefulWidget {
-  final Function(String) onCategorySlected;
-  const CategoriesSlider({super.key, required this.onCategorySlected});
+  final Function(String) onCategorySelected;
+  const CategoriesSlider({super.key, required this.onCategorySelected});
 
   @override
   State<CategoriesSlider> createState() => _CategoriesSliderState();
@@ -64,7 +64,7 @@ class _CategoriesSliderState extends State<CategoriesSlider> {
                       setState(() {
                         currentIndex = index;
                       });
-                      widget.onCategorySlected(category.id);
+                      widget.onCategorySelected(category.id);
                     },
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(5, 8, 10, 8),

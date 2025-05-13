@@ -55,21 +55,27 @@ class FirebaseService {
           .doc(id)
           .collection("product")
           .get();
-
-      print("Số tài liệu trong snapshot: ${snapshot.docs.length}");
-      if (snapshot.docs.isEmpty) {
-        print("Không có sản phẩm nào trong danh mục $id");
-        return [];
-      }
-
       final products = snapshot.docs
           .map((doc) => Product.fromFireStore(doc.data()))
           .toList();
-      print("Số sản phẩm sau ánh xạ: ${products.length}");
       return products;
     } catch (e) {
-      print("Lỗi khi lấy sản phẩm trong $id: $e");
-      return [];
+      throw Exception("Lỗi khi lấy sản phẩm trong $id: $e");
+    }
+  }
+
+  Future<void> updateFavoriteStatus(
+      String categoryId, String productId, bool favorite) async {
+    try {
+      print("Truy vấn Firestore: categoires/$categoryId/product/$productId");
+      await FirebaseFirestore.instance
+          .collection("categoires")
+          .doc(categoryId)
+          .collection("product")
+          .doc(productId)
+          .update({"favourite": favorite});
+    } catch (e) {
+      throw Exception("Lỗi khi cập nhật trạng thái yêu thích  $e");
     }
   }
 }

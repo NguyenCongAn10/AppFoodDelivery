@@ -4,9 +4,9 @@ class Product {
   final String id;
   final String name;
   final String imageUrl;
-  final double price;
+  final String price;
   final String description;
-  final bool favourite;
+  bool favourite;
   Product({
     required this.id,
     required this.name,
@@ -21,8 +21,8 @@ class Product {
         id: data["id"] ?? "",
         name: data["name"] ?? "",
         imageUrl: data["imageUrl"] ?? "",
-        price: data["price"],
+        price: data["price"] ?? "",
         description: data["description"] ?? "",
-        favourite: data["favourite"] == "false");
+        favourite: data["favourite"] ?? false);
   }
 }
