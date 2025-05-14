@@ -1,94 +1,41 @@
+import 'dart:ffi';
+
 import 'package:delivery_apps/common/color_extention.dart';
 import 'package:delivery_apps/common_widget/TopBackgroundClipperProductDetail.dart';
 import 'package:delivery_apps/common_widget/normal_text.dart';
 import 'package:delivery_apps/common_widget/normal_text_bold.dart';
 import 'package:delivery_apps/common_widget/roundIconCircle.dart';
-import 'package:delivery_apps/common_widget/round_button_icon_login.dart';
 import 'package:delivery_apps/model/product.dart';
 import 'package:flutter/material.dart';
 
-// class ProductDetailPage extends StatefulWidget {
-//   final Product product;
-//   const ProductDetailPage({super.key, required this.product});
-
-//   @override
-//   State<ProductDetailPage> createState() => _ProductViewState();
-// }
-
-// class _ProductViewState extends State<ProductDetailPage> {
-//   final product = widget.product;
-//   @override
-//   Widget build(BuildContext context, dynamic product) {
-//     return Scaffold(
-//       body: Stack(children: [
-//         ClipPath(
-//           clipper: TopBackgroundClipper(),
-//           child: Container(
-//             height: 400,
-//             color: TColor.textfield,
-//           ),
-//         ),
-//         Padding(
-//           padding: EdgeInsets.only(left: 10, right: 10),
-//           child: Column(
-//             children: [
-//               SafeArea(
-//                   child: Row(
-//                 children: [
-//                   RoundIconCircle(
-//                     icon: const Icon(
-//                       Icons.arrow_back_ios_new_rounded,
-//                       size: 18,
-//                       color: Colors.black87,
-//                     ),
-//                   ),
-//                   const Spacer(),
-//                   RoundIconCircle(
-//                     icon: const Icon(
-//                       Icons.favorite,
-//                       size: 18,
-//                       color: Colors.black87,
-//                     ),
-//                   ),
-//                   const SizedBox(
-//                     width: 8,
-//                   ),
-//                   RoundIconCircle(
-//                     icon: const Icon(
-//                       Icons.shopping_cart_outlined,
-//                       size: 18,
-//                       color: Colors.black87,
-//                     ),
-//                   ),
-//                 ],
-//               )),
-//               Center(
-//                 child: CircleAvatar(
-//                   radius: 100,
-//                   backgroundImage: NetworkImage(product.imageUrl),
-//                 ),
-//               )
-//             ],
-//           ),
-//         )
-//       ]),
-//     );
-//   }
-// }
 class ProductDetailPage extends StatefulWidget {
   final Product product;
-
-  const ProductDetailPage({super.key, required this.product});
+  final Function(Product) onToggleFavorite;
+  const ProductDetailPage(
+      {super.key, required this.product, required this.onToggleFavorite});
 
   @override
   State<ProductDetailPage> createState() => _ProductViewState();
 }
 
 class _ProductViewState extends State<ProductDetailPage> {
+  late bool isLiked;
+  int itemCount = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    isLiked = widget.product.isLikedByCurrentUser;
+  }
+
+  double getTotalPrice() {
+    final price = double.tryParse(widget.product.price) ?? 0.0;
+    return price * itemCount;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final product = widget.product;
-
+    final totalPrice = getTotalPrice().toStringAsFixed(2);
     return Scaffold(
       body: Stack(
         children: [
@@ -117,11 +64,17 @@ class _ProductViewState extends State<ProductDetailPage> {
                       ),
                       const Spacer(),
                       RoundIconCircle(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.favorite,
                           size: 18,
-                          color: Colors.black87,
+                          color: isLiked ? Colors.red : Colors.black38,
                         ),
+                        onTap: () {
+                          widget.onToggleFavorite(widget.product);
+                          setState(() {
+                            isLiked = !isLiked;
+                          });
+                        },
                       ),
                       const SizedBox(width: 8),
                       RoundIconCircle(
@@ -138,17 +91,19 @@ class _ProductViewState extends State<ProductDetailPage> {
                 Center(
                   child: CircleAvatar(
                     radius: 130,
-                    backgroundImage: NetworkImage(product.imageUrl),
+                    backgroundImage: NetworkImage(
+                      widget.product.imageUrl,
+                    ),
                   ),
                 ),
                 Row(
                   children: [
                     NormalTextBold(
-                      txt: product.name,
+                      txt: widget.product.name,
                       color: TColor.primary,
                       size: 25,
                     ),
-                    Spacer(),
+                    const Spacer(),
                     Container(
                         width: 100,
                         height: 40,
@@ -160,17 +115,28 @@ class _ProductViewState extends State<ProductDetailPage> {
                           child: Row(
                             children: [
                               GestureDetector(
-                                onTap: () {},
+                                onTap: () {
+                                  setState(() {
+                                    if (itemCount > 0) {
+                                      itemCount--;
+                                    }
+                                  });
+                                },
                                 child: const Icon(
                                   Icons.remove,
                                   color: Colors.white,
                                 ),
                               ),
                               Spacer(),
-                              NormalText(color: Colors.white, txt: "0"),
+                              NormalText(
+                                  color: Colors.white, txt: "$itemCount"),
                               Spacer(),
                               GestureDetector(
-                                onTap: () {},
+                                onTap: () {
+                                  setState(() {
+                                    itemCount++;
+                                  });
+                                },
                                 child: const Icon(
                                   Icons.add,
                                   color: Colors.white,
@@ -181,14 +147,49 @@ class _ProductViewState extends State<ProductDetailPage> {
                         )),
                   ],
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 20,
                 ),
                 NormalTextBold(color: TColor.primary, txt: "Description"),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
-                NormalText(color: TColor.primary, txt: product.description)
+                NormalText(
+                    color: TColor.primary, txt: widget.product.description),
+                const SizedBox(
+                  height: 200,
+                ),
+                Container(
+                    height: 50,
+                    padding: EdgeInsets.only(left: 15, right: 8),
+                    decoration: BoxDecoration(
+                      color: TColor.main,
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: Row(
+                      children: [
+                        NormalTextBold(
+                            color: Colors.white, txt: "\$${totalPrice}"),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () {},
+                          child: Container(
+                            alignment: Alignment.center,
+                            width: 120,
+                            height: 35,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: NormalTextBold(
+                              color: TColor.primary,
+                              txt: "Add to cart",
+                              size: 15,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ))
               ],
             ),
           ),
