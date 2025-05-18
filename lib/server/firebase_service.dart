@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:delivery_apps/model/cartItem.dart';
 import 'package:delivery_apps/model/product.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -84,5 +85,76 @@ class FirebaseService {
     } catch (e) {
       throw Exception("Lỗi khi cập nhật isFavorite: $e");
     }
+  }
+
+  Future<List<CartItem>> getCartItem() async {
+    final userId = _firebaseAuth.currentUser?.uid;
+    if (userId == null) throw Exception("Người dùng chưa đăng nhập");
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userId)
+          .collection("cart")
+          .get();
+      return snapshot.docs
+          .map((doc) => CartItem.fromFireStore(doc.data(), doc.id))
+          .toList();
+    } catch (e) {
+      throw Exception("Loi khi lay san pham trong gio hang: $e");
+    }
+  }
+
+  Future<void> addToCart(CartItem newItem) async {
+    final userId = _firebaseAuth.currentUser?.uid;
+    if (userId == null) throw Exception("Người dùng chưa đăng nhập");
+
+    final cartRef = FirebaseFirestore.instance
+        .collection("users")
+        .doc(userId)
+        .collection("cart")
+        .doc(newItem.id);
+
+    final doc = await cartRef.get();
+
+    if (doc.exists) {
+      final data = doc.data()!;
+      final oldQty = int.tryParse(data["quantity"].toString()) ?? 1;
+      final newQty = oldQty + int.parse(newItem.quantity);
+
+      final unitPrice =
+          (double.tryParse(newItem.price)! / int.parse(newItem.quantity));
+      final newPrice = (unitPrice * newQty).toStringAsFixed(2);
+
+      await cartRef.set({
+        ...newItem.toMap(),
+        "quantity": newQty.toString(),
+        "price": newPrice,
+      });
+    } else {
+      await cartRef.set(newItem.toMap());
+    }
+  }
+
+  Future<void> removeFromCart(String cartItemId) async {
+    final userId = _firebaseAuth.currentUser?.uid;
+    if (userId == null) throw Exception("Người dùng chưa đăng nhập");
+    final cartRef = FirebaseFirestore.instance
+        .collection("users")
+        .doc(userId)
+        .collection("cart")
+        .doc(cartItemId);
+    await cartRef.delete();
+  }
+
+  Future<void> updateCartItem(
+      String cartItemId, String newquantity, String newprice) async {
+    final userId = _firebaseAuth.currentUser?.uid;
+    if (userId == null) throw Exception("Người dùng chưa đăng nhập");
+    final cartRef = FirebaseFirestore.instance
+        .collection("users")
+        .doc(userId)
+        .collection("cart")
+        .doc(cartItemId);
+    await cartRef.update({"quantity": newquantity, "price": newprice});
   }
 }

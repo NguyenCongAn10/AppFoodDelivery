@@ -1,3 +1,5 @@
+import 'package:delivery_apps/view/login/welcom_view.dart';
+import 'package:delivery_apps/view/main_tabview/cart_screen.dart';
 import 'package:delivery_apps/view/main_tabview/home_screen.dart';
 import 'package:delivery_apps/view/login/signup_view.dart';
 import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
@@ -24,6 +26,6 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: HomeScreen());
+        home: CartScreen());
   }
 }

@@ -1,11 +1,12 @@
-import 'dart:ffi';
-
 import 'package:delivery_apps/common/color_extention.dart';
 import 'package:delivery_apps/common_widget/TopBackgroundClipperProductDetail.dart';
 import 'package:delivery_apps/common_widget/normal_text.dart';
 import 'package:delivery_apps/common_widget/normal_text_bold.dart';
 import 'package:delivery_apps/common_widget/roundIconCircle.dart';
+import 'package:delivery_apps/model/cartItem.dart';
 import 'package:delivery_apps/model/product.dart';
+import 'package:delivery_apps/server/firebase_service.dart';
+import 'package:delivery_apps/view/main_tabview/cart_screen.dart';
 import 'package:flutter/material.dart';
 
 class ProductDetailPage extends StatefulWidget {
@@ -19,6 +20,7 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductViewState extends State<ProductDetailPage> {
+  FirebaseService _firebaseService = FirebaseService();
   late bool isLiked;
   int itemCount = 1;
 
@@ -78,6 +80,12 @@ class _ProductViewState extends State<ProductDetailPage> {
                       ),
                       const SizedBox(width: 8),
                       RoundIconCircle(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => CartScreen()));
+                        },
                         icon: const Icon(
                           Icons.shopping_cart_outlined,
                           size: 18,
@@ -91,9 +99,12 @@ class _ProductViewState extends State<ProductDetailPage> {
                 Center(
                   child: CircleAvatar(
                     radius: 130,
-                    backgroundImage: NetworkImage(
-                      widget.product.imageUrl,
-                    ),
+                    backgroundImage: widget.product.imageUrl.isNotEmpty
+                        ? NetworkImage(widget.product.imageUrl)
+                        : null,
+                    child: widget.product.imageUrl.isEmpty
+                        ? CircularProgressIndicator()
+                        : null,
                   ),
                 ),
                 Row(
@@ -172,7 +183,21 @@ class _ProductViewState extends State<ProductDetailPage> {
                             color: Colors.white, txt: "\$${totalPrice}"),
                         const Spacer(),
                         GestureDetector(
-                          onTap: () {},
+                          onTap: () async {
+                            await _firebaseService.addToCart(CartItem(
+                                id: widget.product.id,
+                                productId: widget.product.id,
+                                name: widget.product.name,
+                                imageUrl: widget.product.imageUrl,
+                                price: totalPrice,
+                                quantity: itemCount.toString()));
+
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                backgroundColor: Colors.white,
+                                content: NormalText(
+                                    color: Colors.black,
+                                    txt: "Da them san pham vaso gio hang")));
+                          },
                           child: Container(
                             alignment: Alignment.center,
                             width: 120,

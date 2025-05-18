@@ -63,7 +63,6 @@ class _ProductHomeState extends State<ProductHome> {
           selectedCategory, product.id, isLiked);
       print("Cập nhật trạng thái thành công cho sản phẩm: ${product.id}");
 
-      // Cập nhật danh sách products để đổi màu ngay
       setState(() {
         final index = products.indexWhere((p) => p.id == product.id);
         if (index != -1) {
@@ -135,7 +134,7 @@ class _ProductHomeState extends State<ProductHome> {
                             ),
                           ),
                         ).then((_) {
-                          _loadProducts(); // Tải lại danh sách khi quay lại
+                          _loadProducts();
                         });
                       },
                       child: Card(
@@ -149,20 +148,20 @@ class _ProductHomeState extends State<ProductHome> {
                               Stack(alignment: Alignment.topRight, children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
-                                  child: Image.network(
-                                    product.imageUrl.isNotEmpty
-                                        ? product.imageUrl
-                                        : "https://i.imgur.com/qom0c1c.jpg",
-                                    height: 100,
-                                    width: 180,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Icon(Icons.error, size: 50);
-                                    },
-                                  ),
-                                ), 
-
-                            
+                                  child: product.imageUrl.isEmpty
+                                      ? CircularProgressIndicator()
+                                      : Image.network(
+                                          product.imageUrl,
+                                          height: 100,
+                                          width: 180,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return const Icon(Icons.error,
+                                                size: 50);
+                                          },
+                                        ),
+                                ),
                                 Container(
                                   width: 25,
                                   height: 25,
