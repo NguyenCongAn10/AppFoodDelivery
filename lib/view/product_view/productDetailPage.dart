@@ -37,6 +37,7 @@ class _ProductViewState extends State<ProductDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    var media = MediaQuery.of(context).size;
     final totalPrice = getTotalPrice().toStringAsFixed(2);
     return Scaffold(
       body: Stack(
@@ -171,7 +172,7 @@ class _ProductViewState extends State<ProductDetailPage> {
                   height: 200,
                 ),
                 Container(
-                    height: 50,
+                    height: media.height * 0.06,
                     padding: EdgeInsets.only(left: 15, right: 8),
                     decoration: BoxDecoration(
                       color: TColor.main,
@@ -201,7 +202,7 @@ class _ProductViewState extends State<ProductDetailPage> {
                           child: Container(
                             alignment: Alignment.center,
                             width: 120,
-                            height: 35,
+                            height: 40,
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(20),

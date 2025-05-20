@@ -16,7 +16,7 @@ class RoundButton extends StatelessWidget {
   Widget build(BuildContext context) {
     Size media = MediaQuery.of(context).size;
     return Container(
-        height: media.height * 0.065,
+        height: media.height * 0.06,
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
