@@ -1,12 +1,10 @@
-import 'package:delivery_apps/model/product.dart';
-
 class CartItem {
   final String id;
   final String productId;
   final String name;
   final String imageUrl;
   final String price;
-  final String quantity;
+  String quantity;
 
   CartItem(
       {required this.id,

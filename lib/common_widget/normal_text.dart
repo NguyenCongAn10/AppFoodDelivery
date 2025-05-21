@@ -7,19 +7,24 @@ class NormalText extends StatelessWidget {
   TextOverflow overflow;
 
   NormalText(
-      {super.key, required this.color, required this.txt, this.overflow = TextOverflow
-          .ellipsis, this.size = 20});
+      {super.key,
+      required this.color,
+      required this.txt,
+      this.overflow = TextOverflow.ellipsis,
+      this.size = 20});
 
   @override
   Widget build(BuildContext context) {
     return Text(
+      softWrap: true,
       txt,
       overflow: overflow,
       style: TextStyle(
         fontFamily: "Metropolis",
         color: color,
         fontWeight: FontWeight.normal,
-        fontSize: size,),
+        fontSize: size,
+      ),
     );
   }
 }

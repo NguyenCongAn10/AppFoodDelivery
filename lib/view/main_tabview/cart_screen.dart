@@ -5,6 +5,7 @@ import 'package:delivery_apps/common_widget/roundIconCircle.dart';
 import 'package:delivery_apps/common_widget/round_button.dart';
 import 'package:delivery_apps/model/cartItem.dart';
 import 'package:delivery_apps/server/firebase_service.dart';
+import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
 import 'package:delivery_apps/view/main_tabview/home_screen.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
@@ -66,7 +67,7 @@ class _CartScreenState extends State<CartScreen> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => HomeScreen(),
+                              builder: (context) => ButtomNavigation(),
                             ));
                       },
                     ),
@@ -97,88 +98,123 @@ class _CartScreenState extends State<CartScreen> {
                     child: ListView(
                       padding: EdgeInsets.only(bottom: 20, top: 5),
                       children: [
-                        ...listCartItem.map((item) => Container(
-                              width: media.width,
-                              height: 120,
-                              child: Card(
-                                margin: EdgeInsets.all(8),
-                                shadowColor: Colors.transparent,
-                                color: TColor.textfield,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Row(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: const BorderRadius.all(
-                                            Radius.circular(10)),
-                                        child: Image.network(
-                                          item.imageUrl,
-                                          width: 90,
-                                          height: 90,
-                                          fit: BoxFit.cover,
+                        ...listCartItem.map((item) {
+                          int index = listCartItem.indexOf(item);
+                          return Container(
+                            width: media.width,
+                            height: 120,
+                            child: Card(
+                              margin: EdgeInsets.all(8),
+                              shadowColor: Colors.transparent,
+                              color: TColor.textfield,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(10)),
+                                      child: Image.network(
+                                        item.imageUrl,
+                                        width: 90,
+                                        height: 90,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        NormalText(
+                                            color: Colors.black,
+                                            txt: item.name),
+                                        SizedBox(height: 8),
+                                        NormalTextBold(
+                                            color: TColor.secondaryText,
+                                            txt: "\$${item.price}"),
+                                      ],
+                                    ),
+                                    Spacer(),
+                                    Row(
+                                      children: [
+                                        InkWell(
+                                          onTap: () async {
+                                            int currentQuantity =
+                                                int.tryParse(item.quantity) ??
+                                                    0;
+                                            int newQuantity =
+                                                currentQuantity + 1;
+                                            setState(() {
+                                              listCartItem[index].quantity =
+                                                  newQuantity.toString();
+                                            });
+                                            await _firebaseService
+                                                .updateCartItem(item.id,
+                                                    newQuantity.toString());
+                                          },
+                                          child: Container(
+                                            width: 30,
+                                            height: 30,
+                                            decoration: BoxDecoration(
+                                                color: TColor.main,
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
+                                            child: const Icon(Icons.add,
+                                                color: Colors.white),
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(width: 10),
-                                      Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          NormalText(
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8),
+                                          child: NormalText(
                                               color: Colors.black,
-                                              txt: item.name),
-                                          SizedBox(height: 8),
-                                          NormalTextBold(
-                                              color: TColor.secondaryText,
-                                              txt: "\$${item.price}"),
-                                        ],
-                                      ),
-                                      Spacer(),
-                                      Row(
-                                        children: [
-                                          InkWell(
-                                            onTap: () {},
-                                            child: Container(
-                                              width: 30,
-                                              height: 30,
-                                              decoration: BoxDecoration(
-                                                  color: TColor.main,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                              child: const Icon(Icons.add,
-                                                  color: Colors.white),
-                                            ),
+                                              txt: "${item.quantity}"),
+                                        ),
+                                        InkWell(
+                                          onTap: () async {
+                                            int currentQuantity =
+                                                int.tryParse(item.quantity) ??
+                                                    0;
+                                            if (currentQuantity > 1) {
+                                              int newQuantity =
+                                                  currentQuantity - 1;
+                                              setState(() {
+                                                listCartItem[index].quantity =
+                                                    newQuantity.toString();
+                                              });
+                                              await _firebaseService
+                                                  .updateCartItem(item.id,
+                                                      newQuantity.toString());
+                                            } else {
+                                              await _firebaseService
+                                                  .removeFromCart(item.id);
+                                              setState(() {
+                                                _loadListCartItem();
+                                              });
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 30,
+                                            height: 30,
+                                            decoration: BoxDecoration(
+                                                color: TColor.main,
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
+                                            child: const Icon(Icons.remove,
+                                                color: Colors.white),
                                           ),
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8),
-                                            child: NormalText(
-                                                color: Colors.black,
-                                                txt: "${item.quantity}"),
-                                          ),
-                                          InkWell(
-                                            onTap: () {},
-                                            child: Container(
-                                              width: 30,
-                                              height: 30,
-                                              decoration: BoxDecoration(
-                                                  color: TColor.main,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                              child: const Icon(Icons.remove,
-                                                  color: Colors.white),
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    ],
-                                  ),
+                                        ),
+                                      ],
+                                    )
+                                  ],
                                 ),
                               ),
-                            )),
+                            ),
+                          );
+                        }),
                         Padding(
                           padding: const EdgeInsets.only(
                               left: 20, right: 20, top: 20),
@@ -220,7 +256,8 @@ class _CartScreenState extends State<CartScreen> {
                               Spacer(),
                               NormalText(
                                   color: Colors.grey,
-                                  txt: "\$${_pureSubTotal()}")
+                                  txt:
+                                      "\$${_pureSubTotal().toStringAsFixed(2)}")
                             ],
                           ),
                         ),

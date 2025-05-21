@@ -1,6 +1,7 @@
 import 'package:delivery_apps/common/color_extention.dart';
 import 'package:delivery_apps/common_widget/normal_text.dart';
 import 'package:delivery_apps/common_widget/normal_text_bold.dart';
+import 'package:delivery_apps/model/cartItem.dart';
 import 'package:delivery_apps/model/product.dart';
 import 'package:delivery_apps/server/firebase_service.dart';
 import 'package:delivery_apps/view/home/categories_slider.dart';
@@ -201,7 +202,15 @@ class _ProductHomeState extends State<ProductHome> {
                                       borderRadius: BorderRadius.circular(15),
                                     ),
                                     child: IconButton(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        _firebaseService.addToCart(CartItem(
+                                            id: product.id,
+                                            productId: product.id,
+                                            name: product.name,
+                                            imageUrl: product.imageUrl,
+                                            price: product.price,
+                                            quantity: "1"));
+                                      },
                                       padding: EdgeInsets.zero,
                                       icon: const Icon(Icons.add),
                                       color: Colors.white,

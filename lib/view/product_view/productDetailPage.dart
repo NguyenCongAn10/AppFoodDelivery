@@ -6,6 +6,7 @@ import 'package:delivery_apps/common_widget/roundIconCircle.dart';
 import 'package:delivery_apps/model/cartItem.dart';
 import 'package:delivery_apps/model/product.dart';
 import 'package:delivery_apps/server/firebase_service.dart';
+import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
 import 'package:delivery_apps/view/main_tabview/cart_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -85,7 +86,7 @@ class _ProductViewState extends State<ProductDetailPage> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => CartScreen()));
+                                  builder: (context) => ButtomNavigation()));
                         },
                         icon: const Icon(
                           Icons.shopping_cart_outlined,
@@ -193,11 +194,36 @@ class _ProductViewState extends State<ProductDetailPage> {
                                 price: totalPrice,
                                 quantity: itemCount.toString()));
 
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                backgroundColor: Colors.white,
-                                content: NormalText(
-                                    color: Colors.black,
-                                    txt: "Da them san pham vaso gio hang")));
+                            showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: NormalText(
+                                        overflow: TextOverflow.visible,
+                                        color: Colors.black,
+                                        txt: "Da them san pham vao gio hang"),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: () {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      CartScreen(),
+                                                ));
+                                          },
+                                          child: NormalTextBold(
+                                              color: TColor.main,
+                                              txt: "Go to cart")),
+                                      TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: NormalTextBold(
+                                              color: TColor.main, txt: "Ok"))
+                                    ],
+                                  );
+                                });
                           },
                           child: Container(
                             alignment: Alignment.center,

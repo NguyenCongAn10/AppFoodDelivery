@@ -16,6 +16,7 @@ class NormalTextBold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
+      softWrap: true,
       txt,
       overflow: overflow,
       style: TextStyle(

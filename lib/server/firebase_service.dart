@@ -146,8 +146,7 @@ class FirebaseService {
     await cartRef.delete();
   }
 
-  Future<void> updateCartItem(
-      String cartItemId, String newquantity, String newprice) async {
+  Future<void> updateCartItem(String cartItemId, String newquantity) async {
     final userId = _firebaseAuth.currentUser?.uid;
     if (userId == null) throw Exception("Người dùng chưa đăng nhập");
     final cartRef = FirebaseFirestore.instance
@@ -155,6 +154,8 @@ class FirebaseService {
         .doc(userId)
         .collection("cart")
         .doc(cartItemId);
-    await cartRef.update({"quantity": newquantity, "price": newprice});
+    await cartRef.update({
+      "quantity": newquantity,
+    });
   }
 }
