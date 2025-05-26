@@ -185,13 +185,15 @@ class _BannerSliderState extends State<BannerSlider> {
                 }
               }),
         ),
-        const SizedBox(height: 8,),
+        const SizedBox(
+          height: 8,
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
               listBanner.length,
               (index) => Container(
-                    width: currentIndexBaner == index ? 12 : 8,
+                    width: currentIndexBaner == index ? 12 : 10,
                     height: 8,
                     decoration: BoxDecoration(
                         color: currentIndexBaner == index

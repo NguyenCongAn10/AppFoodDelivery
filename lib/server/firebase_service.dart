@@ -21,6 +21,7 @@ class FirebaseService {
           "name": name,
           "createdAt": FieldValue.serverTimestamp(),
         });
+        FirebaseAuth.instance.currentUser?.updateDisplayName(name);
         return user;
       }
       return null;
@@ -29,6 +30,10 @@ class FirebaseService {
     } catch (e) {
       throw Exception('Unexpected error: $e');
     }
+  }
+
+  Future<User?> getCurrentUser() async {
+    return await _firebaseAuth.currentUser;
   }
 
   Future<List<Category>> getCategories() async {
@@ -108,54 +113,66 @@ class FirebaseService {
     final userId = _firebaseAuth.currentUser?.uid;
     if (userId == null) throw Exception("Người dùng chưa đăng nhập");
 
-    final cartRef = FirebaseFirestore.instance
-        .collection("users")
-        .doc(userId)
-        .collection("cart")
-        .doc(newItem.id);
+    try {
+      final cartRef = FirebaseFirestore.instance
+          .collection("users")
+          .doc(userId)
+          .collection("cart")
+          .doc(newItem.id);
 
-    final doc = await cartRef.get();
+      final doc = await cartRef.get();
 
-    if (doc.exists) {
-      final data = doc.data()!;
-      final oldQty = int.tryParse(data["quantity"].toString()) ?? 1;
-      final newQty = oldQty + int.parse(newItem.quantity);
+      if (doc.exists) {
+        final data = doc.data()!;
+        final oldQty = int.tryParse(data["quantity"].toString()) ?? 1;
+        final newQty = oldQty + int.parse(newItem.quantity);
 
-      final unitPrice =
-          (double.tryParse(newItem.price)! / int.parse(newItem.quantity));
-      final newPrice = (unitPrice * newQty).toStringAsFixed(2);
+        final unitPrice =
+            (double.tryParse(newItem.price)! / int.parse(newItem.quantity));
+        final newPrice = (unitPrice * newQty).toStringAsFixed(2);
 
-      await cartRef.set({
-        ...newItem.toMap(),
-        "quantity": newQty.toString(),
-        "price": newPrice,
-      });
-    } else {
-      await cartRef.set(newItem.toMap());
+        await cartRef.set({
+          ...newItem.toMap(),
+          "quantity": newQty.toString(),
+          "price": newPrice,
+        });
+      } else {
+        await cartRef.set(newItem.toMap());
+      }
+    } catch (e) {
+      throw Exception("Lỗi khi thêm sản phẩm vào giỏ hàng: $e");
     }
   }
 
   Future<void> removeFromCart(String cartItemId) async {
     final userId = _firebaseAuth.currentUser?.uid;
     if (userId == null) throw Exception("Người dùng chưa đăng nhập");
-    final cartRef = FirebaseFirestore.instance
-        .collection("users")
-        .doc(userId)
-        .collection("cart")
-        .doc(cartItemId);
-    await cartRef.delete();
+    try {
+      final cartRef = FirebaseFirestore.instance
+          .collection("users")
+          .doc(userId)
+          .collection("cart")
+          .doc(cartItemId);
+      await cartRef.delete();
+    } catch (e) {
+      throw Exception("Lỗi khi xóa sản phẩm trong giỏ hàng: $e");
+    }
   }
 
   Future<void> updateCartItem(String cartItemId, String newquantity) async {
     final userId = _firebaseAuth.currentUser?.uid;
     if (userId == null) throw Exception("Người dùng chưa đăng nhập");
-    final cartRef = FirebaseFirestore.instance
-        .collection("users")
-        .doc(userId)
-        .collection("cart")
-        .doc(cartItemId);
-    await cartRef.update({
-      "quantity": newquantity,
-    });
+    try {
+      final cartRef = FirebaseFirestore.instance
+          .collection("users")
+          .doc(userId)
+          .collection("cart")
+          .doc(cartItemId);
+      await cartRef.update({
+        "quantity": newquantity,
+      });
+    } catch (e) {
+      throw Exception("Lỗi khi cập nhật số lượng sản phẩm trong giỏ hàng: $e");
+    }
   }
 }

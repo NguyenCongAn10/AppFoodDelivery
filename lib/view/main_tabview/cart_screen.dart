@@ -6,7 +6,6 @@ import 'package:delivery_apps/common_widget/round_button.dart';
 import 'package:delivery_apps/model/cartItem.dart';
 import 'package:delivery_apps/server/firebase_service.dart';
 import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
-import 'package:delivery_apps/view/main_tabview/home_screen.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 
@@ -55,27 +54,25 @@ class _CartScreenState extends State<CartScreen> {
     return Scaffold(
         backgroundColor: TColor.textfield,
         body: Padding(
-          padding: EdgeInsets.only(left: 10, right: 10),
+          padding: const EdgeInsets.only(left: 10, right: 10),
           child: Column(
             children: [
               SafeArea(
                 child: Row(
                   children: [
                     RoundIconCircle(
-                      icon: Icon(Icons.arrow_back_ios_new),
+                      icon: const Icon(Icons.arrow_back_ios_new),
                       onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ButtomNavigation(),
-                            ));
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const ButtomNavigation(),
+                        ));
                       },
                     ),
-                    Spacer(),
+                    const Spacer(),
                     NormalText(color: TColor.primary, txt: "Cart"),
-                    Spacer(),
+                    const Spacer(),
                     RoundIconCircle(
-                      icon: Icon(Icons.close),
+                      icon: const Icon(Icons.close),
                       onTap: () {
                         Navigator.of(context).pop();
                       },
@@ -84,7 +81,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
               const SizedBox(
-                height: 20,
+                height: 30,
               ),
               Expanded(
                 child: Container(

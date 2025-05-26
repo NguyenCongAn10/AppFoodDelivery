@@ -22,7 +22,7 @@ class NormalText extends StatelessWidget {
       style: TextStyle(
         fontFamily: "Metropolis",
         color: color,
-        fontWeight: FontWeight.normal,
+        fontWeight: FontWeight.w500,
         fontSize: size,
       ),
     );

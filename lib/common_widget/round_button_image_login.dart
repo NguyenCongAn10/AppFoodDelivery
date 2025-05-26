@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class RoundIconButtonLogin extends StatelessWidget {
+class RoundImageButtonLogin extends StatelessWidget {
   final Widget txt;
   final Color color;
   Image image;
   final bool shadow;
   final VoidCallback onpress;
 
-  RoundIconButtonLogin(
+  RoundImageButtonLogin(
       {super.key,
       required this.txt,
       required this.color,
@@ -50,7 +50,7 @@ class RoundIconButtonLogin extends StatelessWidget {
               txt
             ],
           ),
-          onPressed: () {},
+          onPressed: onpress,
         ));
   }
 }

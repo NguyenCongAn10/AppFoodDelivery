@@ -86,7 +86,7 @@ class _ProductViewState extends State<ProductDetailPage> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => ButtomNavigation()));
+                                  builder: (context) => CartScreen()));
                         },
                         icon: const Icon(
                           Icons.shopping_cart_outlined,

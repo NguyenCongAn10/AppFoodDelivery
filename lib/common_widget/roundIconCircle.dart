@@ -8,6 +8,7 @@ class RoundIconCircle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
+      borderRadius: BorderRadius.circular(15),
       onTap: onTap ?? () => Navigator.pop(context),
       child: Container(
         width: 35,

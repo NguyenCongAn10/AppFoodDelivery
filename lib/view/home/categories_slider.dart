@@ -49,7 +49,7 @@ class _CategoriesSliderState extends State<CategoriesSlider> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 35,
+      height: 40,
       child: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -78,10 +78,10 @@ class _CategoriesSliderState extends State<CategoriesSlider> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(20),
                             child: Container(
-                              width: 24,
-                              height: 24,
+                              width: 30,
+                              height: 30,
                               color: Colors.white,
                               child: Image.network(
                                 category.image,

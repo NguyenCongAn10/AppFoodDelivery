@@ -10,7 +10,7 @@ import 'package:delivery_apps/view/login/welcom_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../../common_widget/round_button_icon_login.dart';
+import '../../common_widget/round_button_image_login.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -248,7 +248,7 @@ class _LoginViewState extends State<LoginView> {
                     const SizedBox(
                       height: 10,
                     ),
-                    RoundIconButtonLogin(
+                    RoundImageButtonLogin(
                       txt: NormalTextBold(
                         color: TColor.primary,
                         txt: "Continue with Google",
@@ -267,7 +267,7 @@ class _LoginViewState extends State<LoginView> {
                     const SizedBox(
                       height: 15,
                     ),
-                    RoundIconButtonLogin(
+                    RoundImageButtonLogin(
                       txt: NormalTextBold(
                         color: TColor.primary,
                         txt: "Continue with Facebook",
@@ -286,7 +286,7 @@ class _LoginViewState extends State<LoginView> {
                     const SizedBox(
                       height: 15,
                     ),
-                    RoundIconButtonLogin(
+                    RoundImageButtonLogin(
                       txt: NormalTextBold(
                         color: TColor.primary,
                         txt: "Continue with Apple",
