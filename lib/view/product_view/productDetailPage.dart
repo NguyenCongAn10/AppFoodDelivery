@@ -8,6 +8,7 @@ import 'package:delivery_apps/model/product.dart';
 import 'package:delivery_apps/server/firebase_service.dart';
 import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
 import 'package:delivery_apps/view/main_tabview/cart_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ProductDetailPage extends StatefulWidget {
@@ -186,13 +187,21 @@ class _ProductViewState extends State<ProductDetailPage> {
                         const Spacer(),
                         GestureDetector(
                           onTap: () async {
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user == null) {
+                              // Hiển thị thông báo hoặc chuyển tới màn đăng nhập
+                              print("User chưa đăng nhập");
+                              return;
+                            }
+
                             await _firebaseService.addToCart(CartItem(
-                                id: widget.product.id,
-                                productId: widget.product.id,
-                                name: widget.product.name,
-                                imageUrl: widget.product.imageUrl,
-                                price: totalPrice,
-                                quantity: itemCount.toString()));
+                              id: widget.product.id,
+                              productId: widget.product.id,
+                              name: widget.product.name,
+                              imageUrl: widget.product.imageUrl,
+                              price: totalPrice,
+                              quantity: itemCount.toString(),
+                            ));
 
                             showDialog(
                                 context: context,

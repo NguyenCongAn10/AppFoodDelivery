@@ -45,5 +45,15 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- Cho phép sử dụng mạng cục bộ để debug Dart VM -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>This app uses the local network to enable debugging.</string>
+	
+	<!-- Cho phép dịch vụ Bonjour phục vụ Dart Observatory -->
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartobservatory._tcp</string>
+	</array>
 </dict>
 </plist>

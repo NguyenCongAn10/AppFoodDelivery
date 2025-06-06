@@ -4,6 +4,7 @@ import 'package:delivery_apps/common_widget/normal_text_bold.dart';
 import 'package:delivery_apps/common_widget/round_textfield.dart';
 import 'package:delivery_apps/view/home/banner_slider.dart';
 import 'package:delivery_apps/view/home/product_home.dart';
+import 'package:delivery_apps/view/home/search_screen.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,12 +28,15 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.black,
           ),
         ),
-        title: NormalTextBold(color: TColor.primary, txt: "Home"),
+        title: NormalTextBold(color: TColor.primary, txt: "Home", size: 20),
         titleSpacing: 0,
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.notifications),
+            icon: const Icon(
+              Icons.notifications,
+              color: Colors.black,
+            ),
           )
         ],
       ),
@@ -41,31 +45,29 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Expanded(
-                  child: RoundTextField(
-                    hint: "Search your food",
-                    preicon: Icon(Icons.search),
-                    sufIcon: false,
-                    obscureText: false,
-                  ),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => const SearchScreen()));
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                decoration: BoxDecoration(
+                  color: TColor.textfield,
+                  borderRadius: BorderRadius.circular(30),
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: TColor.main,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.filter_list,
-                      color: Colors.white,
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, color: Colors.black),
+                    const SizedBox(width: 10),
+                    NormalText(
+                      color: Colors.grey,
+                      txt: "Search your food",
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
             const SizedBox(height: 20),
             BannerSlider(),

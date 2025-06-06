@@ -30,11 +30,13 @@ class _CartScreenState extends State<CartScreen> {
   void _loadListCartItem() async {
     try {
       final _loadListCartItem = await _firebaseService.getCartItem();
-      setState(() {
-        listCartItem = _loadListCartItem;
-      });
+      if (mounted) {
+        setState(() {
+          listCartItem = _loadListCartItem;
+        });
+      }
     } catch (e) {
-      throw Exception("Loi hki tai gion hang: $e");
+      throw Exception("Loi khi tai gio hang: $e");
     }
   }
 

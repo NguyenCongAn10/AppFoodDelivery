@@ -9,31 +9,49 @@ class FirebaseService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
-  Future<User?> createUser(String email, String password, String name) async {
+  Future<bool> isUsernameTaken(String username) async {
+    final query = await FirebaseFirestore.instance
+        .collection('users')
+        .where('username', isEqualTo: username)
+        .get();
+    return query.docs.isNotEmpty;
+  }
+
+  Future<User?> createUser(String email, String password, String username,
+      String name, String phone) async {
     try {
+      // Kiểm tra username đã có chưa
+      if (await isUsernameTaken(username)) {
+        throw Exception('Username đã tồn tại, vui lòng chọn tên khác');
+      }
+
       UserCredential userCredential = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
       User? user = userCredential.user;
+
       if (user != null) {
-        await _firebaseFirestore.collection("users").doc(user.uid).set({
-          "uid": user.uid,
-          "email": email,
-          "name": name,
-          "createdAt": FieldValue.serverTimestamp(),
+        await _firebaseFirestore.collection('users').doc(user.uid).set({
+          'id': user.uid,
+          'email': email,
+          'username': username,
+          'name': name,
+          "phone": phone,
+          "password": password,
+          'createdAt': FieldValue.serverTimestamp(),
         });
-        FirebaseAuth.instance.currentUser?.updateDisplayName(name);
+        await user.updateDisplayName(name);
         return user;
       }
       return null;
     } on FirebaseAuthException catch (e) {
-      throw Exception('Error creating user: ${e.message}');
+      throw Exception('Lỗi tạo user: ${e.message}');
     } catch (e) {
-      throw Exception('Unexpected error: $e');
+      throw Exception('Lỗi không xác định: $e');
     }
   }
 
   Future<User?> getCurrentUser() async {
-    return await _firebaseAuth.currentUser;
+    return _firebaseAuth.currentUser;
   }
 
   Future<List<Category>> getCategories() async {
