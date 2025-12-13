@@ -6,11 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../model/category.dart';
 
 class FirebaseService {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
+  FirebaseAuth get _firebaseAuth => FirebaseAuth.instance;
+  FirebaseFirestore get _firebaseFirestore => FirebaseFirestore.instance;
 
   Future<bool> isUsernameTaken(String username) async {
-    final query = await FirebaseFirestore.instance
+    final query = await _firebaseFirestore
         .collection('users')
         .where('username', isEqualTo: username)
         .get();
@@ -20,7 +20,6 @@ class FirebaseService {
   Future<User?> createUser(String email, String password, String username,
       String name, String phone) async {
     try {
-      // Kiểm tra username đã có chưa
       if (await isUsernameTaken(username)) {
         throw Exception('Username đã tồn tại, vui lòng chọn tên khác');
       }
@@ -56,8 +55,7 @@ class FirebaseService {
 
   Future<List<Category>> getCategories() async {
     try {
-      final snapshot =
-          await FirebaseFirestore.instance.collection("categoires").get();
+      final snapshot = await _firebaseFirestore.collection("categories").get();
       if (snapshot.docs.isEmpty) {
         print("khong co danh muc nao");
         return [];
@@ -74,8 +72,8 @@ class FirebaseService {
   Future<List<Product>> getProductByCategory(String id) async {
     try {
       print("Truy vấn Firestore: categories/$id/product");
-      final snapshot = await FirebaseFirestore.instance
-          .collection("categoires")
+      final snapshot = await _firebaseFirestore
+          .collection("categories")
           .doc(id)
           .collection("product")
           .get();
@@ -88,13 +86,54 @@ class FirebaseService {
     }
   }
 
+  Future<List<Product>> getFavoriteProducts() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      print("Không có người dùng đăng nhập tại ${DateTime.now()}");
+      return [];
+    }
+
+    try {
+      print("Bắt đầu truy vấn danh mục tại ${DateTime.now()}");
+      final categoriesSnapshot =
+          await _firebaseFirestore.collection("categories").get();
+      final List<Product> favoriteProducts = [];
+
+      for (var categoryDoc in categoriesSnapshot.docs) {
+        final categoryId = categoryDoc.id;
+        final productsSnapshot = await _firebaseFirestore
+            .collection("categories")
+            .doc(categoryId)
+            .collection("product")
+            .where('isFavorite', arrayContains: uid)
+            .get();
+
+        final products = productsSnapshot.docs.map((doc) {
+          final data = {
+            ...doc.data(),
+            'categoryId': categoryId,
+            'id': doc.id,
+          };
+          return Product.fromFireStore(data);
+        }).toList();
+        favoriteProducts.addAll(products);
+      }
+
+      return favoriteProducts;
+    } catch (e) {
+      print(
+          "Lỗi khi lấy sản phẩm yêu thích cho UID $uid tại ${DateTime.now()}: $e");
+      return [];
+    }
+  }
+
   Future<void> updateFavoriteStatus(
       String categoryId, String productId, bool isCurrentlyFavorite) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
 
-    final productRef = FirebaseFirestore.instance
-        .collection("categoires")
+    final productRef = _firebaseFirestore
+        .collection("categories")
         .doc(categoryId)
         .collection("product")
         .doc(productId);
@@ -114,7 +153,7 @@ class FirebaseService {
     final userId = _firebaseAuth.currentUser?.uid;
     if (userId == null) throw Exception("Người dùng chưa đăng nhập");
     try {
-      final snapshot = await FirebaseFirestore.instance
+      final snapshot = await _firebaseFirestore
           .collection("users")
           .doc(userId)
           .collection("cart")
@@ -132,7 +171,7 @@ class FirebaseService {
     if (userId == null) throw Exception("Người dùng chưa đăng nhập");
 
     try {
-      final cartRef = FirebaseFirestore.instance
+      final cartRef = _firebaseFirestore
           .collection("users")
           .doc(userId)
           .collection("cart")
@@ -166,7 +205,7 @@ class FirebaseService {
     final userId = _firebaseAuth.currentUser?.uid;
     if (userId == null) throw Exception("Người dùng chưa đăng nhập");
     try {
-      final cartRef = FirebaseFirestore.instance
+      final cartRef = _firebaseFirestore
           .collection("users")
           .doc(userId)
           .collection("cart")
@@ -181,7 +220,7 @@ class FirebaseService {
     final userId = _firebaseAuth.currentUser?.uid;
     if (userId == null) throw Exception("Người dùng chưa đăng nhập");
     try {
-      final cartRef = FirebaseFirestore.instance
+      final cartRef = _firebaseFirestore
           .collection("users")
           .doc(userId)
           .collection("cart")
@@ -191,6 +230,39 @@ class FirebaseService {
       });
     } catch (e) {
       throw Exception("Lỗi khi cập nhật số lượng sản phẩm trong giỏ hàng: $e");
+    }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+    final email = user.email;
+    if (email == null) throw Exception('Email người dùng không tồn tại');
+
+    try {
+      final credential =
+          EmailAuthProvider.credential(email: email, password: currentPassword);
+      await user.reauthenticateWithCredential(credential);
+
+      await user.updatePassword(newPassword);
+
+      await _firebaseFirestore.collection('users').doc(user.uid).update({
+        'password': newPassword,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password') {
+        throw Exception('Mật khẩu hiện tại không đúng');
+      } else if (e.code == 'weak-password') {
+        throw Exception('Mật khẩu mới quá yếu');
+      } else {
+        throw Exception('Lỗi xác thực: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Lỗi khi cập nhật mật khẩu: $e');
     }
   }
 }

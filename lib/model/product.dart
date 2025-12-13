@@ -7,14 +7,17 @@ class Product {
   final String price;
   final List<String> isFavorite;
   final String description;
+  String? categoryId; // Thêm trường này
 
-  Product(
-      {required this.id,
-      required this.name,
-      required this.imageUrl,
-      required this.price,
-      required this.isFavorite,
-      required this.description});
+  Product({
+    required this.id,
+    required this.name,
+    required this.imageUrl,
+    required this.price,
+    required this.isFavorite,
+    required this.description,
+    required this.categoryId,
+  });
 
   bool get isLikedByCurrentUser {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -23,11 +26,13 @@ class Product {
 
   factory Product.fromFireStore(Map<String, dynamic> data) {
     return Product(
-        id: data['id'],
-        name: data['name'],
-        imageUrl: data['imageUrl'],
-        price: data['price'] ?? "",
-        isFavorite: List<String>.from(data['isFavorite'] ?? []),
-        description: data["description"] ?? "");
+      id: data['id'] ?? '',
+      name: data['name'] ?? '',
+      imageUrl: data['imageUrl'] ?? '',
+      price: data['price'] ?? '',
+      isFavorite: List<String>.from(data['isFavorite'] ?? []),
+      description: data['description'] ?? '',
+      categoryId: data['categoryId'] ?? '', // Lấy thêm categoryId từ data
+    );
   }
 }

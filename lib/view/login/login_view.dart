@@ -11,6 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../common_widget/round_button_image_login.dart';
+import '../../server/firebase_service.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});

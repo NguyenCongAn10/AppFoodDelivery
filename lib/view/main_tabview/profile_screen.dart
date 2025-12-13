@@ -3,7 +3,9 @@ import 'package:delivery_apps/common_widget/normal_text.dart';
 import 'package:delivery_apps/common_widget/roundIconCircle.dart';
 import 'package:delivery_apps/common_widget/round_Icon_button.dart';
 import 'package:delivery_apps/server/firebase_service.dart';
+import 'package:delivery_apps/view/login/login_view.dart';
 import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
+import 'package:delivery_apps/view/main_tabview/change_password_screen.dart';
 import 'package:delivery_apps/view/main_tabview/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -149,7 +151,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                   RoundIconButton(
                                     preIcon: Icons.lock_outlined,
-                                    onPress: () {},
+                                    onPress: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ChangePasswordScreen(),
+                                        ),
+                                      );
+                                    },
                                     txt: NormalText(
                                         color: Colors.black,
                                         txt: "Change password",
@@ -157,7 +166,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                   RoundIconButton(
                                     preIcon: Icons.logout_outlined,
-                                    onPress: () {},
+                                    onPress: () {
+                                      FirebaseAuth.instance.signOut();
+                                      Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const LoginView(),
+                                        ),
+                                      );
+                                    },
                                     txt: NormalText(
                                         color: Colors.black,
                                         txt: "Log out",

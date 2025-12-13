@@ -6,7 +6,6 @@ import 'package:delivery_apps/common_widget/roundIconCircle.dart';
 import 'package:delivery_apps/model/cartItem.dart';
 import 'package:delivery_apps/model/product.dart';
 import 'package:delivery_apps/server/firebase_service.dart';
-import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
 import 'package:delivery_apps/view/main_tabview/cart_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

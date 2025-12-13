@@ -1,8 +1,3 @@
-import 'package:delivery_apps/view/login/welcom_view.dart';
-import 'package:delivery_apps/view/main_tabview/cart_screen.dart';
-import 'package:delivery_apps/view/main_tabview/home_screen.dart';
-import 'package:delivery_apps/view/login/signup_view.dart';
-import 'package:delivery_apps/view/main_tabview/bottom_nav.dart';
 import 'package:delivery_apps/view/on_boading/startup_view.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +20,6 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: ButtomNavigation());
+        home: const StartupView());
   }
 }

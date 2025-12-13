@@ -3,7 +3,7 @@ import 'package:delivery_apps/common/color_extention.dart';
 import 'package:delivery_apps/view/main_tabview/cart_screen.dart';
 import 'package:delivery_apps/view/main_tabview/favourite_screen.dart';
 import 'package:delivery_apps/view/main_tabview/home_screen.dart';
-import 'package:delivery_apps/view/main_tabview/wallet_screen.dart';
+import 'package:delivery_apps/view/main_tabview/order_screen.dart';
 import 'package:delivery_apps/view/main_tabview/profile_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -22,7 +22,7 @@ class _ButtomNavigationState extends State<ButtomNavigation> {
   late HomeScreen homeScreen;
   late CartScreen cartScreen;
   late FavouriteScreen favouriteScreen;
-  late WalletScreen walletScreen;
+  late OrderScreen orderScreen;
   late ProfileScreen profileScreen;
 
   @override
@@ -31,13 +31,13 @@ class _ButtomNavigationState extends State<ButtomNavigation> {
     homeScreen = HomeScreen();
     cartScreen = CartScreen();
     favouriteScreen = FavouriteScreen();
-    walletScreen = WalletScreen();
+    orderScreen = OrderScreen();
     profileScreen = ProfileScreen();
     page = [
       homeScreen,
       cartScreen,
       favouriteScreen,
-      walletScreen,
+      orderScreen,
       profileScreen
     ];
     super.initState();
@@ -52,7 +52,7 @@ class _ButtomNavigationState extends State<ButtomNavigation> {
           _buildNavItem(Icons.shopping_cart_outlined, 1,
               highlightColor: TColor.main),
           _buildNavItem(Icons.favorite_outline, 2, highlightColor: TColor.main),
-          _buildNavItem(Icons.account_balance_wallet_outlined, 3,
+          _buildNavItem(Icons.list_alt_outlined, 3,
               highlightColor: TColor.main),
           _buildNavItem(Icons.person_outline, 4, highlightColor: TColor.main),
         ],

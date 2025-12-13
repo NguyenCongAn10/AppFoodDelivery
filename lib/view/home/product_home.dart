@@ -68,13 +68,13 @@ class _ProductHomeState extends State<ProductHome> {
         final index = products.indexWhere((p) => p.id == product.id);
         if (index != -1) {
           products[index] = Product(
-            id: product.id,
-            name: product.name,
-            imageUrl: product.imageUrl,
-            price: product.price,
-            isFavorite: newFavoriteList,
-            description: product.description,
-          );
+              id: product.id,
+              name: product.name,
+              imageUrl: product.imageUrl,
+              price: product.price,
+              isFavorite: newFavoriteList,
+              description: product.description,
+              categoryId: product.categoryId);
         }
       });
     } catch (e) {
