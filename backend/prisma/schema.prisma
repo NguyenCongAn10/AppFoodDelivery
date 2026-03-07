@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model users {
+  id          Int          @id @default(autoincrement())
+  uid         String       @unique
+  name        String
+  email       String       @unique
+  role        user_role    @default(USER)
+  phone       String?
+  created_at  DateTime?    @default(now())
+
+  restaurants restaurants[]
+  shippers    shippers[]
+}
+
+model shippers {
+  id            Int       @id @default(autoincrement())
+  user_uid      String    @unique
+  phone         String?
+  vehicle_name  String
+  license_plate String    @unique
+  is_active     Boolean?  @default(true)
+  created_at    DateTime? @default(now())
+
+  users  users   @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
+  orders orders[]
+}
+
+model restaurants {
+  id              Int       @id @default(autoincrement())
+  user_uid        String
+  restaurant_name String
+  address         String
+  latitude        Float
+  longitude       Float
+  rating          Decimal?  @default(0) @db.Decimal(2, 1)
+  rating_count    Int?      @default(0)
+  phone           String?
+  is_open         Boolean?  @default(true)
+  created_at      DateTime? @default(now())
+
+  users  users   @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
+  foods  foods[]
+  orders orders[]
+}
+
+model foods {
+  id            Int       @id @default(autoincrement())
+  restaurant_id Int
+  name          String
+  description   String?
+  price         Decimal   @db.Decimal(10, 2)
+  image_url     String?
+  is_available  Boolean?  @default(true)
+  created_at    DateTime? @default(now())
+
+  restaurants restaurants @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  order_items order_items[]
+}
+
+model orders {
+  id            Int           @id @default(autoincrement())
+  user_uid      String
+  restaurant_id Int
+  shipper_id    Int?
+  status        order_status? @default(PENDING)
+  total_price   Decimal?      @default(0) @db.Decimal(10, 2)
+  created_at    DateTime?     @default(now())
+
+  restaurants  restaurants @relation(fields: [restaurant_id], references: [id])
+  shippers     shippers?   @relation(fields: [shipper_id], references: [id])
+  order_items  order_items[]
+}
+
+model order_items {
+  id       Int     @id @default(autoincrement())
+  order_id Int
+  food_id  Int
+  quantity Int
+  price    Decimal @db.Decimal(10, 2)
+
+  orders orders @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  foods  foods  @relation(fields: [food_id], references: [id])
+}
+
+enum order_status {
+  PENDING
+  CONFIRMED
+  DELIVERING
+  COMPLETED
+  CANCELLED
+}
+
+enum user_role {
+  USER
+  RESTAURANT
+  SHIPPER
+}
