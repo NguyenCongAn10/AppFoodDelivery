@@ -57,11 +57,19 @@ class _RoundTextFieldState extends State<RoundTextField> {
             : null,
         label: Text(
           widget.hint,
-          style: AppTextStyle.bodyBold(context, color: Colors.grey, fontSize: 17),
+          style: AppTextStyle.body(context, color: Colors.grey, fontSize: 17),
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: AppColor.primary(context)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: AppColor.primary(context)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: AppColor.primary(context), width: 2),
         ),
         filled: true,
         fillColor: AppColor.inputFill(context),

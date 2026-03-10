@@ -6,8 +6,8 @@ class AppColor {
   }
 
 
-  static const Color primaryLight = Color(0xff379570);
-  static const Color primaryDark = Color(0xff379570);
+  static const Color primaryLight = Color(0xff4CAF7D);
+  static const Color primaryDark = Color(0xff2F7D5B);
   static Color primary(BuildContext context) => isDarkMode(context) ? primaryDark : primaryLight;
 
   
@@ -32,11 +32,23 @@ class AppColor {
   static const Color textSecondaryDark = Color(0xffB6B7B7);
   static Color textSecondary(BuildContext context) => isDarkMode(context) ? textSecondaryDark : textSecondaryLight;
 
-  static const Color textAccentLight = Color(0xff2A26DA);
-  static const Color textAccentDark = Color(0xff7385FF);
+  static const Color textAccentLight = Color(0xff0D6EFD);
+  static const Color textAccentDark = Color(0xff1E6BFF);
   static Color textAccent(BuildContext context) => isDarkMode(context) ? textAccentDark : textAccentLight;
 
   static const Color containerLight = Color(0xffffffff);
-  static const Color containerDark = Color(0xff121212);
+  static const Color containerDark = Color(0xff18181A); 
   static Color container(BuildContext context) => isDarkMode(context) ? containerDark : containerLight;
+
+  // Container Level 2
+  static const Color containerHighLight = Color(0xffF7F7F7);
+  static const Color containerHighDark = Color(0xff222224);
+  static Color containerHigh(BuildContext context) =>
+      isDarkMode(context) ? containerHighDark : containerHighLight;
+
+  // Container Level 3 (Lightest container in Dark mode)
+  static const Color containerHighestLight = Color(0xffEFEFEF);
+  static const Color containerHighestDark = Color(0xff2C2C2E);
+  static Color containerHighest(BuildContext context) =>
+      isDarkMode(context) ? containerHighestDark : containerHighestLight;
 }

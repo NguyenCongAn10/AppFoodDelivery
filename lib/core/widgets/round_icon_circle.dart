@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:delivery_apps/core/common/color_extension.dart';
 
 class RoundIconCircle extends StatelessWidget {
   final Icon icon;
@@ -15,7 +16,9 @@ class RoundIconCircle extends StatelessWidget {
         height: 35,
         decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(width: 1.5, color: Colors.black12),
+            border: Border.all(
+                width: 1.5,
+                color: AppColor.textTitle(context).withValues(alpha: 0.1)),
             color: Colors.transparent),
         child: icon,
       ),

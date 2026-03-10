@@ -1,11 +1,16 @@
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
+import 'package:delivery_apps/core/providers/theme_provider.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/core/widgets/round_icon_button.dart';
 import 'package:delivery_apps/core/services/firebase_auth_service.dart';
+import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/features/profile/screen/login_view.dart';
 import 'package:delivery_apps/features/home/screen/main_screen.dart';
 import 'package:delivery_apps/features/profile/screen/change_password_screen.dart';
+import 'package:delivery_apps/features/profile/screen/shipper_registration_view.dart';
+import 'package:delivery_apps/features/profile/screen/restaurant_registration_view.dart';
+import 'package:delivery_apps/core/models/user_model.dart';
 import 'package:delivery_apps/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -18,18 +23,32 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  User? user;
+  UserModel? user;
   final FirebaseAuthService _firebaseService = FirebaseAuthService();
 
   @override
   void initState() {
     super.initState();
+    final fbUser = FirebaseAuth.instance.currentUser;
+    if (fbUser != null) {
+      user = UserModel(
+          id: 0,
+          uid: fbUser.uid,
+          name: fbUser.displayName ?? fbUser.email?.split('@').first ?? 'User',
+          email: fbUser.email ?? '',
+          role: UserRole.USER,
+          createdAt: DateTime.now());
+    }
     _getCurrentUser();
   }
 
   Future<void> _getCurrentUser() async {
-    final currentUser = await _firebaseService.getCurrentUser();
-    setState(() => user = currentUser);
+    try {
+      final currentUser = await BackendService().getMe();
+      if (mounted) setState(() => user = currentUser);
+    } catch (e) {
+      // Fallback already handled in initState
+    }
   }
 
   @override
@@ -76,11 +95,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           topLeft: Radius.circular(20),
                           topRight: Radius.circular(20)),
                     ),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 140),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            width: media.width * 0.35,
+                            height: media.width * 0.35,
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.circular(media.width * 0.175),
+                              color: AppColor.container(context),
+                            ),
+                            child: ClipOval(
+                              child: Image.asset("assets/image/avata.jpg",
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity),
+                            ),
+                          ),
                         Text(
-                          user?.displayName ?? "Nguyen Cong An",
+                            user?.name ?? "New Guest",
                           style: AppTextStyle.body(context,
                               fontSize: 20,
                               color: AppColor.textTitle(context)),
@@ -112,6 +147,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               _menuItem(context, Icons.location_on_outlined,
                                   "Location",
                                   onTap: () {}),
+                                if (user?.role == UserRole.USER) ...[
+                                  const SizedBox(height: 10),
+                                  _menuItem(context, Icons.delivery_dining,
+                                      "Register as Shipper",
+                                      onTap: () => Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const ShipperRegistrationView()),
+                                          )),
+                                  const SizedBox(height: 10),
+                                  _menuItem(context, Icons.storefront,
+                                      "Open a Restaurant",
+                                      onTap: () => Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const RestaurantRegistrationView()),
+                                          )),
+                                ],
                               const SizedBox(height: 10),
                               _menuItem(
                                   context, Icons.history_outlined, "History",
@@ -122,8 +175,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   onTap: () {}),
                               const SizedBox(height: 10),
                               _DarkModeToggle(
-                                isDark: isDark,
-                                onToggle: themeProvider.toggleTheme,
+                                  provider: themeProvider,
+                                  onToggle: () =>
+                                      themeProvider.toggleTheme(context),
                               ),
                               const SizedBox(height: 10),
                               _menuItem(
@@ -147,28 +201,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
+                    ),
                   ),
                 ),
               ],
-            ),
-          ),
-          Positioned(
-            top: 110,
-            left: (media.width - media.width * 0.35) / 2,
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              width: media.width * 0.35,
-              height: media.width * 0.35,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(media.width * 0.175),
-                color: AppColor.container(context),
-              ),
-              child: ClipOval(
-                child: Image.asset("assets/image/avata.jpg",
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity),
-              ),
             ),
           ),
         ],
@@ -189,13 +225,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 class _DarkModeToggle extends StatelessWidget {
-  final bool isDark;
+  final ThemeProvider provider;
   final VoidCallback onToggle;
 
-  const _DarkModeToggle({required this.isDark, required this.onToggle});
+  const _DarkModeToggle({required this.provider, required this.onToggle});
 
   @override
   Widget build(BuildContext context) {
+    bool isSys = provider.isSystem;
+    bool isD = provider.isDark ||
+        (isSys && MediaQuery.of(context).platformBrightness == Brightness.dark);
+
+    String label = isSys ? "System Mode" : (isD ? "Dark Mode" : "Light Mode");
+    IconData iconData = isSys
+        ? Icons.settings_system_daydream
+        : (isD ? Icons.dark_mode : Icons.light_mode);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -211,18 +256,18 @@ class _DarkModeToggle extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(isDark ? Icons.dark_mode : Icons.light_mode,
+              Icon(iconData,
                   size: 27, color: AppColor.primary(context)),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(isDark ? "Dark Mode" : "Light Mode",
+                child: Text(label,
                     style: AppTextStyle.body(context,
                         fontSize: 18, color: AppColor.textBody(context))),
               ),
               Transform.scale(
                 scale: 0.85,
                 child: Switch(
-                  value: isDark,
+                  value: isD,
                   onChanged: (_) => onToggle(),
                   activeThumbColor: AppColor.primary(context),
                   activeTrackColor:
@@ -236,3 +281,4 @@ class _DarkModeToggle extends StatelessWidget {
     );
   }
 }
+

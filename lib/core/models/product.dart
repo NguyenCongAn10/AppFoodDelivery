@@ -6,6 +6,7 @@ class Product {
   final List<String> isFavorite;
   final String description;
   String? categoryId;
+  String? restaurantName;
 
   Product({
     required this.id,
@@ -15,6 +16,7 @@ class Product {
     required this.isFavorite,
     required this.description,
     required this.categoryId,
+    this.restaurantName,
   });
 
   bool isLikedBy(String? uid) {
@@ -30,6 +32,7 @@ class Product {
       isFavorite: List<String>.from(data['isFavorite'] ?? []),
       description: data['description'] ?? '',
       categoryId: data['categoryId'] ?? '',
+      restaurantName: data['restaurantName'],
     );
   }
 
@@ -42,6 +45,7 @@ class Product {
       isFavorite: [],
       description: json['description'] ?? '',
       categoryId: json['restaurant_id'].toString(),
+      restaurantName: json['restaurant_name'],
     );
   }
 }

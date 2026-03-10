@@ -6,8 +6,9 @@ import 'package:delivery_apps/core/services/firebase_auth_service.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/core/services/auth_repository.dart';
 import 'package:delivery_apps/features/profile/screen/login_view.dart';
-import 'package:delivery_apps/features/home/screen/home_screen.dart';
+import 'package:delivery_apps/core/router/app_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SignUpView extends StatefulWidget {
@@ -57,7 +58,8 @@ class _SignUpViewState extends State<SignUpView> {
             phone: phone,
           );
         } catch (e) {
-          debugPrint('Warning: Backend user creation failed: $e');
+          if (kDebugMode)
+            debugPrint('Warning: Backend user creation failed: $e');
         }
       }
 
@@ -70,8 +72,7 @@ class _SignUpViewState extends State<SignUpView> {
             backgroundColor: AppColor.primary(context),
           ),
         );
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+        await AppRouter.routeAfterLogin(context);
       }
     } on FirebaseException catch (e) {
       final msg = switch (e.code) {
@@ -87,7 +88,7 @@ class _SignUpViewState extends State<SignUpView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.secondaryBackground(context),
+      backgroundColor: AppColor.inputFill(context),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.only(left: 15, right: 15, top: 40),
@@ -97,18 +98,17 @@ class _SignUpViewState extends State<SignUpView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new,
-                      color: Colors.black),
+                  icon: Icon(Icons.arrow_back_ios_new,
+                      color: AppColor.textTitle(context)),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 10),
                 Text('Register',
                     style: AppTextStyle.title(context,
                         color: AppColor.textTitle(context))),
                 Text('Enter Your Personal Information',
-                    style: AppTextStyle.bodyBold(context,
-                        color: AppColor.textBody(context))),
-                const SizedBox(height: 20),
+                    style: AppTextStyle.bodyBold(context)),
+                const SizedBox(height: 30),
                 _label(context, 'Username'),
                 RoundTextField(
                   textEditingController: userNameController,
@@ -188,17 +188,19 @@ class _SignUpViewState extends State<SignUpView> {
                     if (_formKey.currentState!.validate()) await _register();
                   },
                 ),
+                SizedBox(height: 20),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text('Already have an account? ',
-                        style: AppTextStyle.body(context,
-                            color: AppColor.textTitle(context))),
+                        style: AppTextStyle.body(context)),
                     TextButton(
                       onPressed: () => Navigator.push(context,
                           MaterialPageRoute(builder: (_) => const LoginView())),
                       child: Text('Login',
                           style: TextStyle(
-                              color: AppColor.primary(context), fontSize: 20)),
+                              color: AppColor.primary(context), fontSize: 16)),
                     ),
                   ],
                 ),

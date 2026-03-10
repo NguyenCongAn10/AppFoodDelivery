@@ -144,6 +144,5 @@ class ThemeProviderScope extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(ThemeProviderScope oldWidget) =>
-      provider.themeMode != oldWidget.provider.themeMode;
+  bool updateShouldNotify(ThemeProviderScope oldWidget) => true;
 }

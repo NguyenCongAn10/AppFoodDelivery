@@ -2,10 +2,11 @@ import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/widgets/round_button.dart';
 import 'package:delivery_apps/core/widgets/round_textfield.dart';
-import 'package:delivery_apps/features/home/screen/main_screen.dart';
+import 'package:delivery_apps/core/router/app_router.dart';
 import 'package:delivery_apps/features/profile/screen/signup_view.dart';
 import 'package:delivery_apps/features/profile/screen/welcome_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:delivery_apps/core/widgets/round_button_image_login.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
@@ -40,12 +41,21 @@ class _LoginViewState extends State<LoginView> {
         final idToken = await firebaseUser.getIdToken(true);
         if (idToken != null) {
           await AuthRepository().saveFirebaseToken(idToken);
+          
+          try {
+            await BackendService().createUser(
+              uid: firebaseUser.uid,
+              name: firebaseUser.displayName ?? email.split('@')[0],
+              email: firebaseUser.email ?? email,
+            );
+          } catch (e) {
+            if (kDebugMode) debugPrint('Backend createUser warning: $e');
+          }
         }
       }
 
       if (mounted) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const MainScreen()));
+        await AppRouter.routeAfterLogin(context);
       }
     } on FirebaseAuthException catch (e) {
       final msg = switch (e.code) {
@@ -82,13 +92,12 @@ class _LoginViewState extends State<LoginView> {
             email: result.user.email ?? '',
           );
         } catch (e) {
-          debugPrint('Backend createUser warning: $e');
+          if (kDebugMode) debugPrint('Backend createUser warning: $e');
         }
       }
 
       if (mounted) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const MainScreen()));
+        await AppRouter.routeAfterLogin(context);
       }
     } catch (e) {
       setState(() => errorMessage = 'Google Sign-In failed. Please try again.');
@@ -121,7 +130,7 @@ class _LoginViewState extends State<LoginView> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.arrow_back_ios_new,
-                              color: Colors.black),
+                              color: Colors.white),
                           onPressed: () => Navigator.of(context).push(
                             PageRouteBuilder(
                               pageBuilder: (_, __, ___) => const WelcomeView(),
@@ -139,29 +148,22 @@ class _LoginViewState extends State<LoginView> {
                             ),
                           ),
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.push(context,
-                              MaterialPageRoute(builder: (_) => SignUpView())),
-                          child: Text("Register",
-                              style: AppTextStyle.bodyBold(context,
-                                  fontSize: 15,
-                                  color: AppColor.textTitle(context))),
-                        ),
                       ],
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Sign In",
-                              style: AppTextStyle.title(context,
-                                  fontSize: 30,
-                                  color: AppColor.textTitle(context))),
-                          Text("Login To Continue Using App",
-                              style: AppTextStyle.body(context,
-                                  color: AppColor.textTitle(context))),
-                        ],
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Text("Fresh & Delicious",
+                                style: AppTextStyle.title(context,
+                                    fontSize: 30,
+                                    color: Colors.white)),
+                            Text("Discovery your next favotire meal",
+                                style: AppTextStyle.body(context,
+                                    color: Colors.white)),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -175,23 +177,22 @@ class _LoginViewState extends State<LoginView> {
             right: 0,
             child: Container(
               height: media.height * 0.7,
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: AppColor.container(context),
                 borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(40),
-                    topRight: Radius.circular(40)),
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20)),
               ),
               child: Padding(
-                padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
+                padding: const EdgeInsets.only(left: 15, right: 15, top: 20),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     children: [
                       Align(
                         alignment: Alignment.topLeft,
-                        child: Text("Email",
-                            style: AppTextStyle.body(context,
-                                color: AppColor.textTitle(context))),
+                        child: Text("Email Address",
+                            style: AppTextStyle.bodyBold(context)),
                       ),
                       RoundTextField(
                         validator: (v) => v == null || v.isEmpty
@@ -200,15 +201,14 @@ class _LoginViewState extends State<LoginView> {
                         hint: " Enter Your Email ",
                         obscureText: false,
                         textEditingController: emailController,
-                        preicon: const Icon(Icons.account_circle_outlined),
+                        preicon: const Icon(Icons.email_outlined),
                         sufIcon: false,
                       ),
                       const SizedBox(height: 10),
                       Align(
                         alignment: Alignment.topLeft,
                         child: Text("Password",
-                            style: AppTextStyle.body(context,
-                                color: AppColor.textTitle(context))),
+                            style: AppTextStyle.bodyBold(context)),
                       ),
                       RoundTextField(
                         hint: "Enter Your Password",
@@ -252,12 +252,30 @@ class _LoginViewState extends State<LoginView> {
                           }
                         },
                       ),
-                      const SizedBox(height: 10),
-                      Text("Or Continue With",
-                          style: AppTextStyle.bodyBold(context,
-                              fontSize: 15,
-                              color: AppColor.textTitle(context))),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 30),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: Colors.grey[500],
+                              thickness: 1,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text("Or Continue With",
+                                style:
+                                    AppTextStyle.body(context, fontSize: 15)),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: Colors.grey[500],
+                              thickness: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 30),
                       RoundImageButtonLogin(
                         txt: _isGoogleLoading
                             ? SizedBox(
@@ -280,29 +298,53 @@ class _LoginViewState extends State<LoginView> {
                         onpress: _isGoogleLoading ? () {} : _signInWithGoogle,
                       ),
                       const SizedBox(height: 15),
-                      RoundImageButtonLogin(
-                        txt: Text("Continue with Facebook",
-                            style: AppTextStyle.bodyBold(context,
-                                fontSize: 18,
-                                color: AppColor.textTitle(context))),
-                        color: AppColor.secondaryBackground(context),
-                        image: Image.asset("assets/image/logo_facebook.png",
-                            width: 30, height: 30, fit: BoxFit.contain),
-                        shadow: true,
-                        onpress: () {},
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text("Don't have an account? ",
+                              style: AppTextStyle.body(context)),
+                          TextButton(
+                            onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const SignUpView())),
+                            child: Text(
+                              "Create Account",
+                              style: AppTextStyle.bodyBold(context).copyWith(
+                                fontSize: 15,
+                                color: AppColor.primary(context),
+                              ),
+                            ),
+                          )
+                        ],
+
                       ),
-                      const SizedBox(height: 15),
-                      RoundImageButtonLogin(
-                        txt: Text("Continue with Apple",
-                            style: AppTextStyle.bodyBold(context,
-                                fontSize: 18,
-                                color: AppColor.textTitle(context))),
-                        color: AppColor.secondaryBackground(context),
-                        image: Image.asset("assets/image/apple_icon.png",
-                            width: 30, height: 30, fit: BoxFit.contain),
-                        shadow: true,
-                        onpress: () {},
-                      ),
+
+                      // const SizedBox(height: 15),
+                      // RoundImageButtonLogin(
+                      //   txt: Text("Continue with Facebook",
+                      //       style: AppTextStyle.bodyBold(context,
+                      //           fontSize: 18,
+                      //           color: AppColor.textTitle(context))),
+                      //   color: AppColor.secondaryBackground(context),
+                      //   image: Image.asset("assets/image/logo_facebook.png",
+                      //       width: 30, height: 30, fit: BoxFit.contain),
+                      //   shadow: true,
+                      //   onpress: () {},
+                      // ),
+                      // const SizedBox(height: 15),
+                      // RoundImageButtonLogin(
+                      //   txt: Text("Continue with Apple",
+                      //       style: AppTextStyle.bodyBold(context,
+                      //           fontSize: 18,
+                      //           color: AppColor.textTitle(context))),
+                      //   color: AppColor.secondaryBackground(context),
+                      //   image: Image.asset("assets/image/apple_icon.png",
+                      //       width: 30, height: 30, fit: BoxFit.contain),
+                      //   shadow: true,
+                      //   onpress: () {},
+                      // ),
                     ],
                   ),
                 ),

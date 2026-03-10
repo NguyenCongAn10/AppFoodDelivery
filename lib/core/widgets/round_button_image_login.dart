@@ -24,7 +24,7 @@ class RoundImageButtonLogin extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
       
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(15),
           boxShadow: shadow
               ? [
                   BoxShadow(
@@ -39,17 +39,20 @@ class RoundImageButtonLogin extends StatelessWidget {
         ),
         child: TextButton(
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisAlignment: image == null
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (image != null)
+              if (image != null) ...[
                 Padding(
                   padding: const EdgeInsets.only(left: 35),
                   child: image,
                 ),
-              const SizedBox(
-                width: 10,
-              ),
+                const SizedBox(
+                  width: 10,
+                ),
+              ],
               txt
             ],
           ),

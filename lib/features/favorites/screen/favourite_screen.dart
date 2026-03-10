@@ -7,6 +7,7 @@ import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/core/services/local_cart_service.dart';
 import 'package:delivery_apps/features/home/screen/main_screen.dart';
 import 'package:delivery_apps/features/home/screen/product_detail_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class FavouriteScreen extends StatefulWidget {
@@ -48,7 +49,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('Lỗi khi tải sản phẩm yêu thích: $e');
+      if (kDebugMode) debugPrint('Lỗi khi tải sản phẩm yêu thích: $e');
       setState(() {
         favoriteProducts = [];
         _isLoading = false;
@@ -158,7 +159,8 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                                                 width: 25,
                                                 height: 25,
                                                 decoration: BoxDecoration(
-                                                  color: Colors.white,
+                                                  color: AppColor.container(
+                                                      context),
                                                   borderRadius:
                                                       BorderRadius.circular(15),
                                                 ),

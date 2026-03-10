@@ -3,6 +3,8 @@ import 'package:delivery_apps/core/models/food_model.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
 import 'package:delivery_apps/core/models/shipper_model.dart';
 import 'package:delivery_apps/core/models/user_model.dart';
+import 'package:delivery_apps/core/models/category_model.dart';
+import 'package:delivery_apps/core/models/address_model.dart';
 import 'package:delivery_apps/core/services/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -16,11 +18,10 @@ class BackendService {
 
   BackendService._internal();
 
-  static const String baseUrl = 'http://192.168.1.9:3000/api';
+  static const String baseUrl = 'http://192.168.1.82:3000/api';
 
   final _authRepo = AuthRepository();
 
-  // ─── Headers ─────────────────────────────────────────────────────────────
 
   Future<Map<String, String>> _getHeaders() async {
     final token = await _authRepo.getToken();
@@ -62,9 +63,14 @@ class BackendService {
   }
 
 
-  Future<List<FoodModel>> getFoods() async {
+  Future<List<FoodModel>> getFoods({String? categoryId}) async {
+    String url = '$baseUrl/foods';
+    if (categoryId != null && categoryId.isNotEmpty) {
+      url += '?category_id=$categoryId';
+    }
+
     final response = await http.get(
-      Uri.parse('$baseUrl/foods'),
+      Uri.parse(url),
       headers: await _getHeaders(),
     );
 
@@ -208,7 +214,6 @@ class BackendService {
     }
   }
 
-  /// Cập nhật thông tin shipper → ShipperModel
   Future<ShipperModel> updateMyShipper({
     String? phone,
     String? vehicleName,
@@ -298,6 +303,84 @@ class BackendService {
       return UserModel.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
     } else {
       throw Exception('Failed to update user: ${response.statusCode}');
+    }
+  }
+
+  Future<List<CategoryModel>> getCategories() async {
+    final response = await http.get(Uri.parse('$baseUrl/categories'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data
+          .map((json) => CategoryModel.fromJson(json))
+          .cast<CategoryModel>()
+          .toList();
+    } else {
+      throw Exception('Failed to load categories: ${response.statusCode}');
+    }
+  }
+
+  // Address Methods
+  Future<List<AddressModel>> getAddresses() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/addresses'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final list = jsonDecode(response.body) as List<dynamic>;
+      return list.map((e) => AddressModel.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load addresses: ${response.statusCode}');
+    }
+  }
+
+  Future<AddressModel> addAddress({
+    required String address,
+    double? latitude,
+    double? longitude,
+    bool isDefault = false,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/addresses'),
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        'address': address,
+        'latitude': latitude,
+        'longitude': longitude,
+        'is_default': isDefault,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return AddressModel.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to add address: ${response.statusCode}');
+    }
+  }
+
+  Future<AddressModel> updateAddress(
+    int addressId, {
+    String? address,
+    double? latitude,
+    double? longitude,
+    bool? isDefault,
+  }) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/addresses/$addressId'),
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        if (address != null) 'address': address,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        if (isDefault != null) 'is_default': isDefault,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return AddressModel.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to update address: ${response.statusCode}');
     }
   }
 }

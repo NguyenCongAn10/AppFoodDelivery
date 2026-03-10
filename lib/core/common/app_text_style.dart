@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:delivery_apps/core/common/color_extension.dart';
 
 class AppTextStyle {
+  static bool _isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
   static TextStyle title(
     BuildContext context, {
     double? fontSize,
@@ -12,8 +14,8 @@ class AppTextStyle {
   }) =>
       TextStyle(
         fontFamily: "Metropolis",
-        color: color ?? AppColor.textTitle(context),
-        fontWeight: fontWeight ?? FontWeight.w600,
+        color: color ?? (_isDark(context) ? Colors.white : Colors.black),
+        fontWeight: fontWeight ?? FontWeight.w700,
         fontSize: fontSize ?? 26,
         letterSpacing: letterSpacing,
         height: height,
@@ -29,7 +31,8 @@ class AppTextStyle {
   }) =>
       TextStyle(
         fontFamily: "Metropolis",
-        color: color ?? AppColor.textBody(context),
+        color:
+            color ?? (_isDark(context) ? Colors.grey[400] : Colors.grey[800]), 
         fontWeight: fontWeight ?? FontWeight.w500,
         fontSize: fontSize ?? 16,
         letterSpacing: letterSpacing,
@@ -46,8 +49,9 @@ class AppTextStyle {
   }) =>
       TextStyle(
         fontFamily: "Metropolis",
-        color: color ?? AppColor.textBody(context),
-        fontWeight: fontWeight ?? FontWeight.bold,
+        color:
+            color ?? (_isDark(context) ? Colors.grey[200] : Colors.grey[900]),
+        fontWeight: fontWeight ?? FontWeight.w600,
         fontSize: fontSize ?? 16,
         letterSpacing: letterSpacing,
         height: height,
@@ -63,7 +67,8 @@ class AppTextStyle {
   }) =>
       TextStyle(
         fontFamily: "Metropolis",
-        color: color ?? AppColor.textSecondary(context),
+        color:
+            color ?? (_isDark(context) ? Colors.grey[500] : Colors.grey[600]),
         fontWeight: fontWeight ?? FontWeight.w400,
         fontSize: fontSize ?? 14,
         letterSpacing: letterSpacing,
@@ -80,7 +85,10 @@ class AppTextStyle {
   }) =>
       TextStyle(
         fontFamily: "Metropolis",
-        color: color ?? AppColor.textAccent(context),
+        color: color ??
+            (_isDark(context)
+                ? const Color(0xff7385FF)
+                : const Color(0xff2A26DA)), 
         fontWeight: fontWeight ?? FontWeight.w500,
         fontSize: fontSize ?? 16,
         letterSpacing: letterSpacing,

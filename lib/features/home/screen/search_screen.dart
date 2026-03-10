@@ -1,12 +1,15 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
+import 'package:delivery_apps/core/widgets/round_textfield.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/core/models/cart_item.dart';
 import 'package:delivery_apps/core/models/product.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/core/services/local_cart_service.dart';
+import 'package:delivery_apps/core/widgets/round_textfield.dart';
 import 'package:delivery_apps/features/home/screen/product_detail_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -50,6 +53,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 'price': e.price,
                 'description': e.description ?? '',
                 'restaurant_id': e.restaurantId,
+                'restaurant_name': e.restaurantName,
               }))
           .toList();
       setState(() {
@@ -57,7 +61,7 @@ class _SearchScreenState extends State<SearchScreen> {
         _filteredProducts = products;
       });
     } catch (e) {
-      debugPrint("Lỗi khi lấy sản phẩm: $e");
+      if (kDebugMode) debugPrint("Lỗi khi lấy sản phẩm: $e");
     } finally {
       setState(() => _isLoading = false);
     }
@@ -89,55 +93,28 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: AppColor.container(context),
-                        border: Border.all(
-                            color: AppColor.primary(context), width: 1),
-                        borderRadius: BorderRadius.circular(30),
+                    
+                    child: RoundTextField(
+                      textEditingController: _searchController,
+                      hint: "Search your food",
+                      preicon: Icon(
+                        Icons.search,
+                        color: AppColor.textTitle(context),
                       ),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              decoration: const InputDecoration(
-                                hintText: "Search your food",
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding:
-                                    EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              cursorColor: AppColor.primary(context),
-                              style: TextStyle(
-                                  fontSize: 17,
-                                  color: AppColor.textBody(context)),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: _filterProducts,
-                            icon: const Icon(Icons.search),
-                            iconSize: 27,
-                            color: AppColor.primary(context),
-                          ),
-                          Container(
-                            height: 50,
-                            width: 50,
-                            decoration: BoxDecoration(
-                              color: AppColor.primary(context),
-                              borderRadius: const BorderRadius.only(
-                                topRight: Radius.circular(25),
-                                bottomRight: Radius.circular(25),
-                              ),
-                            ),
-                            child: const Icon(Icons.camera_alt_outlined,
-                                size: 27, color: Colors.white),
-                          ),
-                        ],
-                      ),
+                      sufIcon: false,
+                      obscureText: false,
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    height: 50,
+                    width: 50,
+                    decoration: BoxDecoration(
+                      color: AppColor.primary(context),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: const Icon(Icons.camera_alt_outlined,
+                        size: 27, color: Colors.white),
                   ),
                 ],
               ),
@@ -175,19 +152,19 @@ class _SearchScreenState extends State<SearchScreen> {
                                 width: 180,
                                 height: 200,
                                 decoration: BoxDecoration(
-                                  color: AppColor.container(context),
+                                  color: Colors.transparent,
                                   borderRadius: BorderRadius.circular(15),
                                 ),
                                 child: Stack(
                                   alignment: Alignment.bottomCenter,
                                   children: [
                                     Positioned(
-                                      bottom: 0,
+                                      bottom: 15,
                                       child: Container(
                                         width: 180,
                                         height: 180,
                                         decoration: BoxDecoration(
-                                          color: AppColor.inputFill(context),
+                                          color: AppColor.container(context),
                                           borderRadius:
                                               BorderRadius.circular(20),
                                         ),
@@ -196,11 +173,27 @@ class _SearchScreenState extends State<SearchScreen> {
                                     Positioned(
                                       top: 0,
                                       child: ClipOval(
-                                        child: Image.network(
-                                          product.imageUrl,
+                                        child: CachedNetworkImage(
+                                          imageUrl: product.imageUrl,
                                           width: 120,
                                           height: 120,
                                           fit: BoxFit.cover,
+                                          placeholder: (context, url) =>
+                                              const SizedBox(
+                                            width: 120,
+                                            height: 120,
+                                            child: Center(
+                                                child:
+                                                    CircularProgressIndicator()),
+                                          ),
+                                          errorWidget: (context, url, error) =>
+                                              const SizedBox(
+                                            width: 120,
+                                            height: 120,
+                                            child: Center(
+                                                child: Icon(Icons.error,
+                                                    size: 50)),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -234,12 +227,24 @@ class _SearchScreenState extends State<SearchScreen> {
                                       padding: const EdgeInsets.only(top: 150),
                                       child: Column(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                            CrossAxisAlignment.center,
                                         children: [
                                           Text(product.name,
                                               style: AppTextStyle.body(context,
                                                   color: AppColor.textBody(
                                                       context))),
+                                          const SizedBox(height: 2),
+                                          if (product.restaurantName != null)
+                                            Text(product.restaurantName!,
+                                                style: AppTextStyle.body(
+                                                    context,
+                                                    color:
+                                                        AppColor.textSecondary(
+                                                            context),
+                                                    fontSize: 12),
+                                                maxLines: 1,
+                                                overflow:
+                                                    TextOverflow.ellipsis),
                                           const SizedBox(height: 5),
                                           Text("\$${product.price}",
                                               style: AppTextStyle.bodyBold(

@@ -7,6 +7,7 @@ class FoodModel {
   final String? imageUrl;
   final bool isAvailable;
   final DateTime createdAt;
+  final String? restaurantName;
 
   FoodModel({
     required this.id,
@@ -17,6 +18,7 @@ class FoodModel {
     this.imageUrl,
     required this.isAvailable,
     required this.createdAt,
+    this.restaurantName,
   });
 
   factory FoodModel.fromJson(Map<String, dynamic> json) {
@@ -25,10 +27,13 @@ class FoodModel {
       restaurantId: json['restaurant_id'],
       name: json['name'],
       description: json['description'],
-      price: (json['price'] as num).toDouble(),
+      price: json['price'] is String 
+          ? double.tryParse(json['price']) ?? 0.0 
+          : (json['price'] as num).toDouble(),
       imageUrl: json['image_url'],
       isAvailable: json['is_available'],
       createdAt: DateTime.parse(json['created_at']),
+      restaurantName: json['restaurants']?['restaurant_name'],
     );
   }
 
@@ -42,6 +47,7 @@ class FoodModel {
       'image_url': imageUrl,
       'is_available': isAvailable,
       'created_at': createdAt.toIso8601String(),
+      'restaurant_name': restaurantName,
     };
   }
 }
