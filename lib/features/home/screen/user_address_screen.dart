@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/address_model.dart';
 import 'package:delivery_apps/core/models/place_result.dart';
@@ -111,7 +112,7 @@ class _ChangeAddressScreenState extends State<ChangeAddressScreen> {
               height: 45,
               child: RoundTextField(
                 textEditingController: _searchController,
-                hint: 'Tìm kiếm địa chỉ...',
+                hint: 'Search for a new address',
                 preicon: Icon(Icons.search, color: AppColor.textTitle(context)),
                 sufIcon: false,
                 obscureText: false,
@@ -131,33 +132,40 @@ class _ChangeAddressScreenState extends State<ChangeAddressScreen> {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  color: Colors.orange.withValues(alpha: 0.1),
+                  color: AppColor.textAccent(context).withValues(alpha: 0.1),
                   child: Row(
                     children: [
-                      const Icon(Icons.location_on, color: Colors.orange),
+                      Icon(Icons.location_on,
+                          color: AppColor.textAccent(context)),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Địa chỉ đang chọn',
-                              style: TextStyle(
+                            Text(
+                              'Current Address',
+                              style: AppTextStyle.body(
+                                context,
                                 fontSize: 12,
-                                color: Colors.orange,
+                                color: AppColor.textAccent(context),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             Text(
+                              currentAddress.address.split(',').first,
+                                style: AppTextStyle.bodyBold(context,
+                                    fontSize: 16)),
+                            Text(
                               currentAddress.address,
-                              style: const TextStyle(fontSize: 14),
+                              style: AppTextStyle.body(context, fontSize: 14),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
-                      const Icon(Icons.check_circle, color: Colors.orange),
+                      Icon(Icons.check_circle,
+                          color: AppColor.textAccent(context)),
                     ],
                   ),
                 ),
@@ -192,7 +200,7 @@ class _ChangeAddressScreenState extends State<ChangeAddressScreen> {
                 const Padding(
                   padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Text(
-                    'Địa chỉ của bạn',
+                    'Your Addresses',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                 ),
@@ -200,7 +208,8 @@ class _ChangeAddressScreenState extends State<ChangeAddressScreen> {
                   child: _isLoadingAddresses
                       ? const Center(child: CircularProgressIndicator())
                       : _userAddresses.isEmpty
-                          ? const Center(child: Text('Chưa có địa chỉ nào'))
+                          ? const Center(
+                              child: Text('You have no addresses yet'))
                           : ListView.builder(
                               itemCount: _userAddresses.length,
                               itemBuilder: (context, index) {
@@ -210,23 +219,13 @@ class _ChangeAddressScreenState extends State<ChangeAddressScreen> {
 
                                 return ListTile(
                                   leading: Icon(
-                                    Icons.home,
-                                    color: isSelected
-                                        ? Colors.orange
-                                        : Colors.grey,
+                                    Icons.location_on,
+                                    color: Colors.grey,
                                   ),
-                                  title: Text(address.address),
-                                  subtitle: isSelected
-                                      ? const Text(
-                                          'Đang chọn',
-                                          style:
-                                              TextStyle(color: Colors.orange),
-                                        )
-                                      : null,
-                                  trailing: isSelected
-                                      ? const Icon(Icons.check_circle,
-                                          color: Colors.orange)
-                                      : null,
+                                  title: Text(address.address.split(',').first,
+                                      style: AppTextStyle.bodyBold(context)),
+                                  subtitle: Text(address.address,
+                                      style: AppTextStyle.body(context)),
                                   onTap: () {
                                     addressProvider.selectAddress(address);
                                     Navigator.pop(context);
