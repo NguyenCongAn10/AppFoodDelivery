@@ -4,11 +4,11 @@ import 'package:delivery_apps/core/models/order_model.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
-import 'package:delivery_apps/features/home/screen/main_screen.dart';
 import 'package:flutter/material.dart';
 
 class OrderScreen extends StatefulWidget {
-  const OrderScreen({super.key});
+  final VoidCallback? onBackToHome;
+  const OrderScreen({super.key, this.onBackToHome});
 
   @override
   State<OrderScreen> createState() => _OrderScreenState();
@@ -90,9 +90,11 @@ class _OrderScreenState extends State<OrderScreen> {
                   RoundIconCircle(
                     icon: const Icon(Icons.arrow_back_ios_new),
                     onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const MainScreen(),
-                      ));
+                      if (widget.onBackToHome != null) {
+                        widget.onBackToHome!();
+                      } else {
+                        Navigator.of(context).pop();
+                      }
                     },
                   ),
                   const Spacer(),

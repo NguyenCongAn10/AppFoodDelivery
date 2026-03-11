@@ -9,16 +9,29 @@ datasource db {
 }
 
 model users {
-  id          Int          @id @default(autoincrement())
-  uid         String       @unique
-  name        String
-  email       String       @unique
-  role        user_role    @default(USER)
-  phone       String?
-  created_at  DateTime?    @default(now())
+  id         Int       @id @default(autoincrement())
+  uid        String    @unique
+  name       String
+  email      String    @unique
+  role       user_role @default(USER)
+  phone      String?
+  created_at DateTime? @default(now())
 
   restaurants restaurants[]
   shippers    shippers[]
+  addresses   addresses[]
+}
+
+model addresses {
+  id         Int       @id @default(autoincrement())
+  user_uid   String
+  address    String
+  latitude   Float?
+  longitude  Float?
+  is_default Boolean   @default(false)
+  created_at DateTime? @default(now())
+
+  users users @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
 }
 
 model shippers {
@@ -30,7 +43,7 @@ model shippers {
   is_active     Boolean?  @default(true)
   created_at    DateTime? @default(now())
 
-  users  users   @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
+  users  users    @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
   orders orders[]
 }
 
@@ -47,7 +60,7 @@ model restaurants {
   is_open         Boolean?  @default(true)
   created_at      DateTime? @default(now())
 
-  users  users   @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
+  users  users    @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
   foods  foods[]
   orders orders[]
 }
@@ -55,6 +68,7 @@ model restaurants {
 model foods {
   id            Int       @id @default(autoincrement())
   restaurant_id Int
+  category_id   Int?
   name          String
   description   String?
   price         Decimal   @db.Decimal(10, 2)
@@ -62,8 +76,18 @@ model foods {
   is_available  Boolean?  @default(true)
   created_at    DateTime? @default(now())
 
-  restaurants restaurants @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  restaurants restaurants   @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  categories  categories?   @relation(fields: [category_id], references: [id], onDelete: SetNull)
   order_items order_items[]
+}
+
+model categories {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique
+  icon_url   String?
+  created_at DateTime? @default(now())
+
+  foods foods[]
 }
 
 model orders {
@@ -75,9 +99,9 @@ model orders {
   total_price   Decimal?      @default(0) @db.Decimal(10, 2)
   created_at    DateTime?     @default(now())
 
-  restaurants  restaurants @relation(fields: [restaurant_id], references: [id])
-  shippers     shippers?   @relation(fields: [shipper_id], references: [id])
-  order_items  order_items[]
+  restaurants restaurants   @relation(fields: [restaurant_id], references: [id])
+  shippers    shippers?     @relation(fields: [shipper_id], references: [id])
+  order_items order_items[]
 }
 
 model order_items {

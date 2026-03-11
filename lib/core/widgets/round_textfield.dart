@@ -9,6 +9,8 @@ class RoundTextField extends StatefulWidget {
   final Icon? preicon;
   final bool sufIcon;
   final String? Function(String?)? validator;
+  final Function(String)? onChanged;
+  final EdgeInsetsGeometry? contentPadding;
 
   const RoundTextField({
     super.key,
@@ -18,6 +20,8 @@ class RoundTextField extends StatefulWidget {
     required this.sufIcon,
     required this.obscureText,
     this.validator,
+    this.onChanged,
+    this.contentPadding,
   });
 
   @override
@@ -39,6 +43,7 @@ class _RoundTextFieldState extends State<RoundTextField> {
       controller: widget.textEditingController,
       obscureText: isObscure,
       validator: widget.validator,
+      onChanged: widget.onChanged,
       decoration: InputDecoration(
         floatingLabelBehavior: FloatingLabelBehavior.never,
         prefixIcon: widget.preicon,
@@ -73,6 +78,8 @@ class _RoundTextFieldState extends State<RoundTextField> {
         ),
         filled: true,
         fillColor: AppColor.inputFill(context),
+        isDense: true,
+        contentPadding: widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       ),
     );
   }

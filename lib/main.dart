@@ -1,8 +1,10 @@
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/providers/theme_provider.dart';
+import 'package:delivery_apps/features/home/providers/user_address_provider.dart';
 import 'package:delivery_apps/features/home/screen/startup_view.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,14 +38,19 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ThemeProviderScope(
-      provider: _themeProvider,
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        themeMode: _themeProvider.themeMode,
-        theme: _buildLightTheme(),
-        darkTheme: _buildDarkTheme(),
-        home: const StartupView(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserAddressProvider()),
+      ],
+      child: ThemeProviderScope(
+        provider: _themeProvider,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          themeMode: _themeProvider.themeMode,
+          theme: _buildLightTheme(),
+          darkTheme: _buildDarkTheme(),
+          home: const StartupView(),
+        ),
       ),
     );
   }

@@ -5,13 +5,13 @@ import 'package:delivery_apps/core/widgets/round_button.dart';
 import 'package:delivery_apps/core/models/cart_item.dart';
 import 'package:delivery_apps/core/services/local_cart_service.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
-import 'package:delivery_apps/features/home/screen/main_screen.dart';
 import 'package:delivery_apps/features/order/screen/order_screen.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 
 class CartScreen extends StatefulWidget {
-  const CartScreen({super.key});
+  final VoidCallback? onBackToHome;
+  const CartScreen({super.key, this.onBackToHome});
 
   @override
   State<CartScreen> createState() => _CartScreenState();
@@ -125,9 +125,11 @@ class _CartScreenState extends State<CartScreen> {
                     RoundIconCircle(
                       icon: const Icon(Icons.arrow_back_ios_new),
                       onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const MainScreen(),
-                        ));
+                        if (widget.onBackToHome != null) {
+                          widget.onBackToHome!();
+                        } else {
+                          Navigator.of(context).pop();
+                        }
                       },
                     ),
                     const Spacer(),

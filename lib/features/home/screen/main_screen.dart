@@ -17,68 +17,73 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late int currentIndex;
-  late List<Widget> page;
-  late Widget currentPage;
-  late HomeScreen homeScreen;
-  late CartScreen cartScreen;
-  late FavouriteScreen favouriteScreen;
-  late OrderScreen orderScreen;
-  late ProfileScreen profileScreen;
+  final GlobalKey<CurvedNavigationBarState> _bottomNavigationKey = GlobalKey();
+
+  void _goToHome() {
+    setState(() => currentIndex = 0);
+    // Add null check and properly update curved navigation bar's visual state
+    final navState = _bottomNavigationKey.currentState;
+    if (navState != null) {
+      navState.setPage(0);
+    }
+  }
+
+  List<Widget> get _pages => [
+        const HomeScreen(),
+        CartScreen(onBackToHome: _goToHome),
+        FavouriteScreen(onBackToHome: _goToHome),
+        OrderScreen(onBackToHome: _goToHome),
+        const ProfileScreen(),
+      ];
 
   @override
   void initState() {
-    currentIndex = widget.initialIndex;
-    homeScreen = HomeScreen();
-    cartScreen = CartScreen();
-    favouriteScreen = FavouriteScreen();
-    orderScreen = OrderScreen();
-    profileScreen = ProfileScreen();
-    page = [
-      homeScreen,
-      cartScreen,
-      favouriteScreen,
-      orderScreen,
-      profileScreen
-    ];
     super.initState();
+    currentIndex = widget.initialIndex;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: currentIndex == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && currentIndex != 0) {
+          _goToHome();
+        }
+      },
+      child: Scaffold(
       bottomNavigationBar: CurvedNavigationBar(
+          key: _bottomNavigationKey,
+          index: currentIndex,
         items: [
-          _buildNavItem(context, Icons.home_outlined, 0, highlightColor: AppColor.primary(context)),
-          _buildNavItem(context, Icons.shopping_cart_outlined, 1,
-              highlightColor: AppColor.primary(context)),
-          _buildNavItem(context, Icons.favorite_outline, 2, highlightColor: AppColor.primary(context)),
-          _buildNavItem(context, Icons.list_alt_outlined, 3,
-              highlightColor: AppColor.primary(context)),
-          _buildNavItem(context, Icons.person_outline, 4, highlightColor: AppColor.primary(context)),
+            _buildNavItem(context, Icons.home_outlined, 0),
+            _buildNavItem(context, Icons.shopping_cart_outlined, 1),
+            _buildNavItem(context, Icons.favorite_outline, 2),
+            _buildNavItem(context, Icons.list_alt_outlined, 3),
+            _buildNavItem(context, Icons.person_outline, 4),
         ],
         backgroundColor: AppColor.inputFill(context),
         color: AppColor.container(context),
         animationDuration: const Duration(milliseconds: 500),
-        onTap: (int index) {
-          setState(() {
-            currentIndex = index;
-          });
-        },
+          onTap: (int index) => setState(() => currentIndex = index),
         height: 65,
       ),
-      body: page[currentIndex],
+        body: IndexedStack(
+          index: currentIndex,
+          children: _pages,
+        ),
+      ),
     );
   }
 
-  Widget _buildNavItem(BuildContext context, IconData icon, int index,
-      {Color highlightColor = Colors.blue}) {
-    bool isSelected = currentIndex == index;
+  Widget _buildNavItem(BuildContext context, IconData icon, int index) {
+    final isSelected = currentIndex == index;
     return Container(
       width: 45,
       height: 45,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isSelected ? highlightColor : Colors.transparent,
+        color: isSelected ? AppColor.primary(context) : Colors.transparent,
       ),
       child: Icon(
         icon,

@@ -5,13 +5,13 @@ import 'package:delivery_apps/core/models/cart_item.dart';
 import 'package:delivery_apps/core/models/product.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/core/services/local_cart_service.dart';
-import 'package:delivery_apps/features/home/screen/main_screen.dart';
 import 'package:delivery_apps/features/home/screen/product_detail_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class FavouriteScreen extends StatefulWidget {
-  const FavouriteScreen({super.key});
+  final VoidCallback? onBackToHome;
+  const FavouriteScreen({super.key, this.onBackToHome});
 
   @override
   State<FavouriteScreen> createState() => _FavouriteScreenState();
@@ -77,9 +77,13 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                 children: [
                   RoundIconCircle(
                     icon: const Icon(Icons.arrow_back_ios_new_outlined),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const MainScreen()),
-                    ),
+                    onTap: () {
+                      if (widget.onBackToHome != null) {
+                        widget.onBackToHome!();
+                      } else {
+                        Navigator.of(context).pop();
+                      }
+                    },
                   ),
                   const Spacer(),
                   Text("Your Favorite",

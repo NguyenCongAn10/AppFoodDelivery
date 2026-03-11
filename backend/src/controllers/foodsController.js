@@ -3,8 +3,16 @@ import prisma from '../config/prisma.js';
 // GET /foods (public)
 export const getFoods = async (req, res) => {
     try {
+        const { category_id } = req.query;
+        let whereClause = {};
+
+        if (category_id) {
+            whereClause.category_id = parseInt(category_id, 10);
+        }
+
         const foods = await prisma.foods.findMany({
-            include: { restaurants: true },
+            where: whereClause,
+            include: { restaurants: true, categories: true },
         });
         res.json(foods);
     } catch (err) {

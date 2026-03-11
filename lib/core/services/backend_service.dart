@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:delivery_apps/core/models/place_result.dart';
 import 'package:delivery_apps/core/models/food_model.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
 import 'package:delivery_apps/core/models/shipper_model.dart';
@@ -382,5 +383,20 @@ class BackendService {
     } else {
       throw Exception('Failed to update address: ${response.statusCode}');
     }
+  }
+
+  Future<List<PlaceResult>> searchAddresses(String query) async {
+    final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(query)}&format=json&limit=5');
+    final response = await http.get(url, headers: {
+      'User-Agent': 'DeliveryApp/1.0 (Mobile App)',
+    });
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data
+          .map((e) => PlaceResult.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    throw Exception('Failed to search addresses: ${response.statusCode}');
   }
 }

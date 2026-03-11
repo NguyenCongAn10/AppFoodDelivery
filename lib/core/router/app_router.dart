@@ -26,7 +26,6 @@ class AppRouter {
           MaterialPageRoute(builder: (_) => RestaurantMainScreen(user: user)),
         );
       } else {
-        // Default to USER
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const MainScreen()),

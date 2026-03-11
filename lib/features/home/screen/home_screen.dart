@@ -1,13 +1,13 @@
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/common/app_text_style.dart';
-import 'package:delivery_apps/core/widgets/round_textfield.dart';
+import 'package:delivery_apps/features/home/providers/user_address_provider.dart';
 import 'package:delivery_apps/features/home/screen/user_address_screen.dart';
 import 'package:delivery_apps/features/home/widget/banner_slider.dart';
 import 'package:delivery_apps/features/home/screen/product_home.dart';
 import 'package:delivery_apps/features/home/screen/search_screen.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
-import 'package:delivery_apps/core/models/address_model.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,41 +17,38 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<AddressModel>? _addresses;
-  bool isLoadingAddress = true;
-  AddressModel? defaultAddress;
   @override
   void initState() {
     super.initState();
-    _fetchDefaultAddress();
+    // Seed provider with backend default address if not already set
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initAddress());
   }
 
-  Future<void> _fetchDefaultAddress() async {
+  Future<void> _initAddress() async {
+    final provider = context.read<UserAddressProvider>();
+    if (provider.selectedAddress != null) return;
     try {
       final addresses = await BackendService().getAddresses();
-      _addresses = addresses;
-      if (mounted) {
-        setState(() {
-          try {
-            defaultAddress = addresses.firstWhere((e) => e.isDefault);
-          } catch (_) {
-            defaultAddress = null;
-          }
-          isLoadingAddress = false;
-        });
+      final defaultAddr = addresses.where((e) => e.isDefault).firstOrNull;
+      if (defaultAddr != null && mounted) {
+        provider.selectAddress(defaultAddr);
       }
     } catch (e) {
-      debugPrint("Error fetching addresses: $e");
-      if (mounted) {
-        setState(() {
-          isLoadingAddress = false;
-        });
-      }
+      debugPrint('Error fetching addresses: $e');
     }
+  }
+
+  void _openAddressScreen(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const ChangeAddressScreen(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final address = context.watch<UserAddressProvider>().selectedAddress;
     return Scaffold(
       backgroundColor: AppColor.inputFill(context),
       appBar: AppBar(
@@ -60,11 +57,12 @@ class _HomeScreenState extends State<HomeScreen> {
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Container(
-              decoration: BoxDecoration(
-                color: AppColor.container(context),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.location_on_rounded, color: Colors.red)),
+            decoration: BoxDecoration(
+              color: AppColor.container(context),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.location_on_rounded, color: Colors.red),
+          ),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,18 +70,13 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text("Delivering to", style: AppTextStyle.body(context)),
             GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => const ChangeAddressScreen()));
-              },
+              onTap: () => _openAddressScreen(context),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Flexible(
                     child: Text(
-                      isLoadingAddress
-                          ? "Loading..."
-                          : (defaultAddress?.address ?? "Select Address"),
+                      address?.address ?? 'Select Address',
                       style: AppTextStyle.bodyBold(context,
                           color: AppColor.primary(context), fontSize: 16),
                       maxLines: 1,
@@ -131,7 +124,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 10),
                     Text(
                       "Search your food",
-                      style: AppTextStyle.body(context, color: AppColor.textSecondary(context)),
+                      style: AppTextStyle.body(context,
+                          color: AppColor.textSecondary(context)),
                     ),
                   ],
                 ),
@@ -142,17 +136,20 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Text("Categories", style: AppTextStyle.bodyBold(context, color: AppColor.textTitle(context))),
+                Text("Categories",
+                    style: AppTextStyle.bodyBold(context,
+                        color: AppColor.textTitle(context))),
                 const Spacer(),
                 TextButton(
                   style: ButtonStyle(
-                    overlayColor: MaterialStateProperty.all(Colors.transparent),
+                    overlayColor: WidgetStateProperty.all(Colors.transparent),
                     splashFactory: NoSplash.splashFactory,
                   ),
                   onPressed: () {},
                   child: Text(
                     "See All Categories",
-                    style: AppTextStyle.body(context, color: AppColor.primary(context), fontSize: 15),
+                    style: AppTextStyle.body(context,
+                        color: AppColor.primary(context), fontSize: 15),
                   ),
                 ),
               ],

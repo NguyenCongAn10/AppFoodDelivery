@@ -48,7 +48,7 @@ class _ProductViewState extends State<ProductDetailPage> {
             clipper: TopBackgroundClipper(),
             child: Container(
               height: 350,
-              color: AppColor.inputFill(context),
+              color: AppColor.primary(context),
             ),
           ),
           Padding(
@@ -100,12 +100,15 @@ class _ProductViewState extends State<ProductDetailPage> {
                 ),
                 Row(
                   children: [
-                    Text(
-                      widget.product.name,
-                      style: AppTextStyle.bodyBold(context,
-                          fontSize: 25, color: AppColor.textTitle(context)),
+                    Expanded(
+                      child: Text(
+                        widget.product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyle.bodyBold(context,
+                            fontSize: 25, color: AppColor.textTitle(context)),
+                      ),
                     ),
-                    const Spacer(),
                     Container(
                       width: 100,
                       height: 40,
