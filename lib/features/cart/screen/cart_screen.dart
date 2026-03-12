@@ -3,7 +3,6 @@ import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/core/widgets/round_button.dart';
 import 'package:delivery_apps/core/models/cart_item.dart';
-import 'package:delivery_apps/core/services/local_cart_service.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/features/order/screen/order_screen.dart';
 import 'package:dotted_line/dotted_line.dart';
@@ -19,7 +18,6 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   List<CartItem> listCartItem = [];
-  final LocalCartService _localCartService = LocalCartService();
   final BackendService _backendService = BackendService();
   double subTotal = 0.0;
   bool _isCheckingOut = false;
@@ -32,14 +30,19 @@ class _CartScreenState extends State<CartScreen> {
 
   void _loadListCartItem() async {
     try {
-      final _loadListCartItem = await _localCartService.getCart();
+      final cartItems = await _backendService.getCart();
       if (mounted) {
         setState(() {
-          listCartItem = _loadListCartItem;
+          listCartItem = cartItems;
+          subTotal = _pureSubTotal();
         });
       }
     } catch (e) {
-      throw Exception("Loi khi tai gio hang: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Lỗi khi tải giỏ hàng: $e")),
+        );
+      }
     }
   }
 
@@ -71,7 +74,6 @@ class _CartScreenState extends State<CartScreen> {
     setState(() => _isCheckingOut = true);
 
     try {
-      // Build items list
       final items = listCartItem.map((item) => {
         'food_id': int.tryParse(item.productId) ?? 0,
         'quantity': int.tryParse(item.quantity) ?? 1,
@@ -82,8 +84,7 @@ class _CartScreenState extends State<CartScreen> {
         items: items.cast<Map<String, int>>(),
       );
 
-      // Xóa cart sau khi đặt hàng thành công
-      await _localCartService.clearCart();
+      await _backendService.clearCart();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -214,9 +215,10 @@ class _CartScreenState extends State<CartScreen> {
                                               listCartItem[index].quantity =
                                                   newQuantity.toString();
                                             });
-                                            await _localCartService
+                                            await _backendService
                                                 .updateCartItem(item.id,
                                                     newQuantity.toString());
+                                            _loadListCartItem(); // reload to get authoritative totals
                                           },
                                           child: Container(
                                             width: 30,
@@ -246,16 +248,14 @@ class _CartScreenState extends State<CartScreen> {
                                                 listCartItem[index].quantity =
                                                     newQuantity.toString();
                                               });
-                                              await _localCartService
+                                              await _backendService
                                                   .updateCartItem(item.id,
                                                       newQuantity.toString());
                                             } else {
-                                              await _localCartService
+                                              await _backendService
                                                   .removeFromCart(item.id);
-                                              setState(() {
-                                                _loadListCartItem();
-                                              });
                                             }
+                                            _loadListCartItem();
                                           },
                                           child: Container(
                                             width: 30,

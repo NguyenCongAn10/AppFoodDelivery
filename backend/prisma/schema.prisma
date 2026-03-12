@@ -20,6 +20,8 @@ model users {
   restaurants restaurants[]
   shippers    shippers[]
   addresses   addresses[]
+  cart_items  cart_items[]
+  favorites   favorites[]
 }
 
 model addresses {
@@ -63,6 +65,8 @@ model restaurants {
   users  users    @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
   foods  foods[]
   orders orders[]
+  cart_items cart_items[]
+  favorites  favorites[]
 }
 
 model foods {
@@ -79,6 +83,8 @@ model foods {
   restaurants restaurants   @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
   categories  categories?   @relation(fields: [category_id], references: [id], onDelete: SetNull)
   order_items order_items[]
+  cart_items  cart_items[]
+  favorites   favorites[]
 }
 
 model categories {
@@ -127,4 +133,33 @@ enum user_role {
   USER
   RESTAURANT
   SHIPPER
+}
+
+model cart_items {
+  id            Int       @id @default(autoincrement())
+  user_uid      String
+  food_id       Int
+  restaurant_id Int
+  quantity      Int       @default(1)
+  created_at    DateTime? @default(now())
+
+  users       users       @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
+  foods       foods       @relation(fields: [food_id], references: [id], onDelete: Cascade)
+  restaurants restaurants @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_uid, food_id])
+}
+
+model favorites {
+  id            Int       @id @default(autoincrement())
+  user_uid      String
+  food_id       Int
+  restaurant_id Int
+  created_at    DateTime? @default(now())
+
+  users       users       @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
+  foods       foods       @relation(fields: [food_id], references: [id], onDelete: Cascade)
+  restaurants restaurants @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_uid, food_id])
 }

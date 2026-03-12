@@ -5,7 +5,7 @@ import 'package:delivery_apps/core/models/cart_item.dart';
 import 'package:delivery_apps/core/models/food_model.dart';
 import 'package:delivery_apps/core/models/product.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
-import 'package:delivery_apps/core/services/local_cart_service.dart';
+
 import 'package:delivery_apps/features/home/screen/product_detail_page.dart';
 import 'package:delivery_apps/features/home/widget/categories_slider.dart';
 import 'package:flutter/foundation.dart';
@@ -20,7 +20,6 @@ class ProductHome extends StatefulWidget {
 
 class _ProductHomeState extends State<ProductHome> {
   final BackendService _backendService = BackendService();
-  final LocalCartService _localCartService = LocalCartService();
   List<Product> products = [];
   String selectedCategory = "";
   bool isLoading = true;
@@ -36,17 +35,36 @@ class _ProductHomeState extends State<ProductHome> {
     setState(() => isLoading = true);
     
     try {
+      // Load both foods and favorites to sync UI states
       final List<FoodModel> foods =
           await _backendService.getFoods(categoryId: categoryId);
-      final loadedProducts = foods.map((e) => Product.fromJson({
-        'id': e.id,
-        'name': e.name,
-        'image_url': e.imageUrl ?? '',
-        'price': e.price,
-        'description': e.description ?? '',
-        'restaurant_id': e.restaurantId,
-        'restaurant_name': e.restaurantName,
-      })).toList();
+      
+      List<Product> favs = [];
+      try {
+        favs = await _backendService.getFavorites();
+      } catch (_) {
+        // Ignore fav fetch errors so products still load if not logged in
+      }
+      final favIds = favs.map((e) => e.id).toSet();
+
+      final loadedProducts = foods.map((e) {
+        final p = Product.fromJson({
+          'id': e.id,
+          'name': e.name,
+          'image_url': e.imageUrl ?? '',
+          'price': e.price,
+          'description': e.description ?? '',
+          'restaurant_id': e.restaurantId,
+          'restaurant_name': e.restaurantName,
+        });
+
+        // Sync favorite states with backend
+        if (favIds.contains(p.id)) {
+          p.isFavorite.add('local'); // Legacy 'local' flag used in UI
+        }
+
+        return p;
+      }).toList();
 
       if (!mounted) return;
       setState(() {
@@ -65,6 +83,11 @@ class _ProductHomeState extends State<ProductHome> {
 
   void _toggleFavorite(Product product) {
     if (!mounted) return;
+    
+    _backendService.toggleFavorite(int.parse(product.id)).catchError((e) {
+      if (kDebugMode) debugPrint("Lỗi toggle backend favorite: $e");
+    });
+    
     setState(() {
       final index = products.indexWhere((p) => p.id == product.id);
       if (index != -1) {
@@ -284,24 +307,42 @@ class _ProductHomeState extends State<ProductHome> {
                                                   BorderRadius.circular(10),
                                             ),
                                             child: IconButton(
-                                              onPressed: () {
-                                                _localCartService
-                                                    .addToCart(CartItem(
-                                                  id: product.id,
-                                                  productId: product.id,
-                                                  restaurantId:
-                                                      product.categoryId ?? '',
-                                                  name: product.name,
-                                                  imageUrl: product.imageUrl,
-                                                  price: product.price,
-                                                  quantity: "1",
-                                                ));
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                      content: Text(
-                                                          "Added to cart")),
-                                                );
+                                              onPressed: () async {
+                                                try {
+                                                  await _backendService
+                                                      .addToCart(CartItem(
+                                                    id: '', // Backend DB will auto-generate
+                                                    productId: product.id,
+                                                    restaurantId:
+                                                        product.categoryId ??
+                                                            '',
+                                                    name: product.name,
+                                                    imageUrl: product.imageUrl,
+                                                    price: product.price,
+                                                    quantity: "1",
+                                                  ));
+                                                  if (mounted) {
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      const SnackBar(
+                                                          content: Text(
+                                                              "Đã thêm vào giỏ hàng")),
+                                                    );
+                                                  }
+                                                } catch (e) {
+                                                  if (mounted) {
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      SnackBar(
+                                                          content:
+                                                              Text("Lỗi: $e"),
+                                                          backgroundColor:
+                                                              Colors.red),
+                                                    );
+                                                  }
+                                                }
                                               },
                                               icon: const Icon(Icons.add,
                                                   color: Colors.white,

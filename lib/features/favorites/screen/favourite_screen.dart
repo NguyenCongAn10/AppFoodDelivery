@@ -4,7 +4,6 @@ import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/core/models/cart_item.dart';
 import 'package:delivery_apps/core/models/product.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
-import 'package:delivery_apps/core/services/local_cart_service.dart';
 import 'package:delivery_apps/features/home/screen/product_detail_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +18,6 @@ class FavouriteScreen extends StatefulWidget {
 
 class _FavouriteScreenState extends State<FavouriteScreen> {
   final BackendService _backendService = BackendService();
-  final LocalCartService _localCartService = LocalCartService();
   List<Product> favoriteProducts = [];
   bool _isLoading = true;
 
@@ -32,24 +30,16 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
   Future<void> _loadFavoriteProducts() async {
     setState(() => _isLoading = true);
     try {
-      final foods = await _backendService.getFoods();
-      final all = foods
-          .map((e) => Product.fromJson({
-                'id': e.id,
-                'name': e.name,
-                'image_url': e.imageUrl ?? '',
-                'price': e.price,
-                'description': e.description ?? '',
-                'restaurant_id': e.restaurantId,
-              }))
-          .toList();
+      final all = await _backendService.getFavorites();
 
+      if (!mounted) return;
       setState(() {
-        favoriteProducts = all.where((p) => p.isLikedBy('local')).toList();
+        favoriteProducts = all;
         _isLoading = false;
       });
     } catch (e) {
       if (kDebugMode) debugPrint('Lỗi khi tải sản phẩm yêu thích: $e');
+      if (!mounted) return;
       setState(() {
         favoriteProducts = [];
         _isLoading = false;
@@ -57,10 +47,13 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
     }
   }
 
-  void _toggleFavorite(Product product) {
-    setState(() {
-      favoriteProducts.removeWhere((p) => p.id == product.id);
-    });
+  Future<void> _toggleFavorite(Product product) async {
+    try {
+      await _backendService.toggleFavorite(int.parse(product.id));
+      _loadFavoriteProducts(); // Reload list after removal
+    } catch (e) {
+      if (kDebugMode) debugPrint('Lỗi xoá yêu thích trên backend: $e');
+    }
   }
 
   @override
@@ -99,7 +92,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
               child: Container(
                 width: media.width,
                 decoration: BoxDecoration(
-                  color: AppColor.container(context),
+                  color: AppColor.inputFill(context),
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
@@ -136,7 +129,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                                   ),
                                 ).then((_) => _loadFavoriteProducts()),
                                 child: Card(
-                                  color: AppColor.inputFill(context),
+                                  color: AppColor.container(context),
                                   child: Column(
                                     children: [
                                       Expanded(
@@ -198,6 +191,13 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                                                       color: AppColor.textTitle(
                                                           context))),
                                               const SizedBox(height: 4),
+                                              if (product.restaurantName !=
+                                                  null)
+                                                Text(product.restaurantName!,
+                                                    style: AppTextStyle.body(
+                                                      context,
+                                                      fontSize: 13,
+                                                    )),
                                               Row(
                                                 mainAxisAlignment:
                                                     MainAxisAlignment
@@ -224,22 +224,53 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                                                               12),
                                                     ),
                                                     child: IconButton(
-                                                      onPressed: () =>
-                                                          _localCartService
+                                                      onPressed: () async {
+                                                        try {
+                                                          await _backendService
                                                               .addToCart(
-                                                        CartItem(
-                                                          id: product.id,
-                                                          productId: product.id,
-                                                          restaurantId:
-                                                              product.categoryId ??
-                                                                  '',
-                                                          name: product.name,
-                                                          imageUrl:
-                                                              product.imageUrl,
-                                                          price: product.price,
-                                                          quantity: "1",
-                                                        ),
-                                                      ),
+                                                            CartItem(
+                                                              id: '', // Backend DB will auto-generate
+                                                              productId:
+                                                                  product.id,
+                                                              restaurantId:
+                                                                  product.categoryId ??
+                                                                      '',
+                                                              name:
+                                                                  product.name,
+                                                              imageUrl: product
+                                                                  .imageUrl,
+                                                              price:
+                                                                  product.price,
+                                                              quantity: "1",
+                                                            ),
+                                                          );
+                                                          if (mounted) {
+                                                            ScaffoldMessenger
+                                                                    .of(context)
+                                                                .showSnackBar(
+                                                              const SnackBar(
+                                                                  content: Text(
+                                                                      'Đã thêm vào giỏ hàng!'),
+                                                                  backgroundColor:
+                                                                      Colors
+                                                                          .green),
+                                                            );
+                                                          }
+                                                        } catch (e) {
+                                                          if (mounted) {
+                                                            ScaffoldMessenger
+                                                                    .of(context)
+                                                                .showSnackBar(
+                                                              SnackBar(
+                                                                  content: Text(
+                                                                      'Lỗi: $e'),
+                                                                  backgroundColor:
+                                                                      Colors
+                                                                          .red),
+                                                            );
+                                                          }
+                                                        }
+                                                      },
                                                       icon:
                                                           const Icon(Icons.add),
                                                       padding: EdgeInsets.zero,

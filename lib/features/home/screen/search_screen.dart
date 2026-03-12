@@ -6,7 +6,6 @@ import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/core/models/cart_item.dart';
 import 'package:delivery_apps/core/models/product.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
-import 'package:delivery_apps/core/services/local_cart_service.dart';
 import 'package:delivery_apps/core/widgets/round_textfield.dart';
 import 'package:delivery_apps/features/home/screen/product_detail_page.dart';
 import 'package:flutter/foundation.dart';
@@ -22,7 +21,6 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final BackendService _backendService = BackendService();
-  final LocalCartService _localCartService = LocalCartService();
 
   List<Product> _products = [];
   List<Product> _filteredProducts = [];
@@ -206,19 +204,30 @@ class _SearchScreenState extends State<SearchScreen> {
                                         backgroundColor:
                                             AppColor.primary(context),
                                         child: GestureDetector(
-                                          onTap: () =>
-                                              _localCartService.addToCart(
-                                                CartItem(
-                                                  id: product.id,
-                                                  productId: product.id,
-                                                  restaurantId:
-                                                      product.categoryId ?? '',
-                                                  name: product.name,
-                                                  imageUrl: product.imageUrl,
-                                                  price: product.price,
-                                                  quantity: "1",
-                                                ),
-                                              ),
+                                          onTap: () async {
+                                            try {
+                                              await _backendService.addToCart(CartItem(
+                                                id: '',
+                                                productId: product.id,
+                                                restaurantId: product.categoryId ?? '',
+                                                name: product.name,
+                                                imageUrl: product.imageUrl,
+                                                price: product.price,
+                                                quantity: "1",
+                                              ));
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text("Đã thêm vào giỏ hàng")),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.red),
+                                                );
+                                              }
+                                            }
+                                          },
                                           child: const Icon(Icons.add,
                                               color: Colors.white),
                                         ),

@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'package:delivery_apps/core/models/place_result.dart';
 import 'package:delivery_apps/core/models/food_model.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
+import 'package:delivery_apps/core/models/product.dart';
 import 'package:delivery_apps/core/models/shipper_model.dart';
 import 'package:delivery_apps/core/models/user_model.dart';
 import 'package:delivery_apps/core/models/category_model.dart';
 import 'package:delivery_apps/core/models/address_model.dart';
+import 'package:delivery_apps/core/models/cart_item.dart';
 import 'package:delivery_apps/core/services/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -398,5 +400,122 @@ class BackendService {
           .toList();
     }
     throw Exception('Failed to search addresses: ${response.statusCode}');
+  }
+
+  // Cart Methods
+  Future<List<CartItem>> getCart() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/cart'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final list = jsonDecode(response.body) as List<dynamic>;
+      return list.map((e) => CartItem.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load cart: ${response.statusCode}');
+    }
+  }
+
+  Future<void> addToCart(CartItem item) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/cart'),
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        'food_id': int.tryParse(item.productId) ?? 0,
+        'quantity': int.tryParse(item.quantity) ?? 1,
+      }),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final message = jsonDecode(response.body)['error'] ?? 'Unknown error';
+      throw Exception('Failed to add to cart: $message');
+    }
+  }
+
+  Future<void> updateCartItem(String cartItemId, String quantity) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/cart/$cartItemId/quantity'),
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        'quantity': int.tryParse(quantity) ?? 1,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update cart item: ${response.statusCode}');
+    }
+  }
+
+  Future<void> removeFromCart(String cartItemId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/cart/$cartItemId'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to remove from cart: ${response.statusCode}');
+    }
+  }
+
+  Future<void> clearCart() async {
+    final token = await _authRepo.getToken();
+    if (token == null) throw Exception('Vui lòng đăng nhập');
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/cart'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Lỗi xoá giỏ hàng');
+    }
+  }
+
+  Future<List<Product>> getFavorites() async {
+    final token = await _authRepo.getToken();
+    if (token == null) throw Exception('Vui lòng đăng nhập');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/favorites'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((jsonItem) {
+        final food = jsonItem['foods'];
+        return Product.fromJson({
+          'id': food['id'],
+          'name': food['name'],
+          'image_url': food['image_url'] ?? '',
+          'price': food['price'],
+          'description': food['description'] ?? '',
+          'restaurant_id': food['restaurant_id'],
+        });
+      }).toList();
+    } else {
+      throw Exception('Lỗi lấy danh sách yêu thích');
+    }
+  }
+
+  Future<void> toggleFavorite(int foodId) async {
+    final token = await _authRepo.getToken();
+    if (token == null) throw Exception('Vui lòng đăng nhập');
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/favorites/toggle'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'food_id': foodId,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Lỗi cập nhật yêu thích');
+    }
   }
 }

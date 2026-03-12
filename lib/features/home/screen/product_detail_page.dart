@@ -4,7 +4,7 @@ import 'package:delivery_apps/core/widgets/top_background_clipper.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/core/models/cart_item.dart';
 import 'package:delivery_apps/core/models/product.dart';
-import 'package:delivery_apps/core/services/local_cart_service.dart';
+import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/features/cart/screen/cart_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -23,7 +23,7 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductViewState extends State<ProductDetailPage> {
-  final LocalCartService _cartService = LocalCartService();
+  final BackendService _backendService = BackendService();
   late bool isLiked;
   int itemCount = 1;
 
@@ -165,44 +165,52 @@ class _ProductViewState extends State<ProductDetailPage> {
                       const Spacer(),
                       GestureDetector(
                         onTap: () async {
-                          await _cartService.addToCart(CartItem(
-                            id: widget.product.id,
-                            productId: widget.product.id,
-                            restaurantId: widget.product.categoryId ?? '',
-                            name: widget.product.name,
-                            imageUrl: widget.product.imageUrl,
-                            price: totalPrice.toStringAsFixed(2),
-                            quantity: itemCount.toString(),
-                          ));
+                          try {
+                            await _backendService.addToCart(CartItem(
+                              id: '', // Backend DB will auto-generate
+                              productId: widget.product.id,
+                              restaurantId: widget.product.categoryId ?? '',
+                              name: widget.product.name,
+                              imageUrl: widget.product.imageUrl,
+                              price: widget.product.price, // Dùng price gốc của 1 cái áo/món ăn, Backend lấy price từ Product ko cũng được. Ở đây gởi CartItem là đủ
+                              quantity: itemCount.toString(),
+                            ));
 
-                          if (!mounted) return;
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              backgroundColor: AppColor.container(context),
-                              title: Text(
-                                "Đã thêm sản phẩm vào giỏ hàng",
-                                style: AppTextStyle.body(context,
-                                    color: AppColor.textTitle(context)),
+                            if (!mounted) return;
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                backgroundColor: AppColor.container(context),
+                                title: Text(
+                                  "Đã thêm sản phẩm vào giỏ hàng",
+                                  style: AppTextStyle.body(context,
+                                      color: AppColor.textTitle(context)),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pushReplacement(ctx,
+                                        MaterialPageRoute(
+                                            builder: (_) => CartScreen())),
+                                    child: Text("Go to cart",
+                                        style: AppTextStyle.bodyBold(context,
+                                            color: AppColor.primary(context))),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: Text("Ok",
+                                        style: AppTextStyle.bodyBold(context,
+                                            color: AppColor.primary(context))),
+                                  ),
+                                ],
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.push(ctx,
-                                      MaterialPageRoute(
-                                          builder: (_) => CartScreen())),
-                                  child: Text("Go to cart",
-                                      style: AppTextStyle.bodyBold(context,
-                                          color: AppColor.primary(context))),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx),
-                                  child: Text("Ok",
-                                      style: AppTextStyle.bodyBold(context,
-                                          color: AppColor.primary(context))),
-                                ),
-                              ],
-                            ),
-                          );
+                            );
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
+                              );
+                            }
+                          }
                         },
                         child: Container(
                           alignment: Alignment.center,

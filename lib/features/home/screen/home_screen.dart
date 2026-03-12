@@ -134,26 +134,9 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 20),
             BannerSlider(),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                Text("Categories",
-                    style: AppTextStyle.bodyBold(context,
-                        color: AppColor.textTitle(context))),
-                const Spacer(),
-                TextButton(
-                  style: ButtonStyle(
-                    overlayColor: WidgetStateProperty.all(Colors.transparent),
-                    splashFactory: NoSplash.splashFactory,
-                  ),
-                  onPressed: () {},
-                  child: Text(
-                    "See All Categories",
-                    style: AppTextStyle.body(context,
-                        color: AppColor.primary(context), fontSize: 15),
-                  ),
-                ),
-              ],
-            ),
+            Text("Categories",
+                style: AppTextStyle.bodyBold(context,
+                    color: AppColor.textTitle(context))),
             ProductHome(),
           ],
         ),
