@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/providers/theme_provider.dart';
@@ -58,7 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isDark = themeProvider.isDark;
 
     return Scaffold(
-      backgroundColor: AppColor.inputFill(context),
+      backgroundColor: AppColor.container(context),
       body: Stack(
         children: [
           Padding(
@@ -90,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                     width: media.width,
                     decoration: BoxDecoration(
-                      color: AppColor.container(context),
+                      color: AppColor.inputFill(context),
                       borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(20),
                           topRight: Radius.circular(20)),
@@ -108,7 +109,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: AppColor.container(context),
                             ),
                             child: ClipOval(
-                              child: Image.asset("assets/image/avata.jpg",
+                              child: user?.avatarUrl != null &&
+                                      user!.avatarUrl!.isNotEmpty
+                                  ? CachedNetworkImage(
+                                      imageUrl: user!.avatarUrl!,
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      placeholder: (context, url) =>
+                                          CircularProgressIndicator(),
+                                      errorWidget: (context, url, error) =>
+                                          Icon(Icons.error),
+                                    )
+                                  : Image.asset("assets/image/avata.jpg",
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                   height: double.infinity),
@@ -166,13 +179,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           )),
                                 ],
                               const SizedBox(height: 10),
-                              _menuItem(
-                                  context, Icons.history_outlined, "History",
-                                  onTap: () {}),
-                              const SizedBox(height: 10),
-                              _menuItem(
-                                  context, Icons.error_outline, "About",
-                                  onTap: () {}),
+                                // _menuItem(
+                                //     context, Icons.history_outlined, "History",
+                                //     onTap: () {}),
+                                // const SizedBox(height: 10),
+                                // _menuItem(
+                                //     context, Icons.error_outline, "About",
+                                //     onTap: () {}),
                               const SizedBox(height: 10),
                               _DarkModeToggle(
                                   provider: themeProvider,

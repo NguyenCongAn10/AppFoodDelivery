@@ -3,7 +3,7 @@ import prisma from '../config/prisma.js';
 // POST /orders (user)
 export const createOrder = async (req, res) => {
     try {
-        const { restaurant_id, items, address, payment_method } = req.body; // items: [{ food_id, quantity }]
+        const { restaurant_id, items, address, payment_method, lat, lng } = req.body; // items: [{ food_id, quantity }]
         const user_uid = req.user.uid;
         
         let total_price = 0;
@@ -27,6 +27,8 @@ export const createOrder = async (req, res) => {
                 total_price,
                 delivery_address: address,
                 payment_method,
+                delivery_lat: lat,
+                delivery_lng: lng,
                 order_items: { create: orderItems },
             },
             include: { order_items: true },
@@ -43,7 +45,12 @@ export const getMyOrders = async (req, res) => {
     try {
         const orders = await prisma.orders.findMany({
             where: { user_uid: req.user.uid },
-            include: { order_items: { include: { foods: true } } },
+            include: { 
+                order_items: { include: { foods: true } },
+                restaurants: true,
+                shippers: { include: { users: true } },
+                users: true
+            },
             orderBy: { created_at: 'desc' },
         });
         res.json(orders);
@@ -62,7 +69,12 @@ export const getAssignedOrders = async (req, res) => {
         
         const orders = await prisma.orders.findMany({
             where: { shipper_id: shipper.id },
-            include: { order_items: { include: { foods: true } } },
+            include: { 
+                order_items: { include: { foods: true } },
+                restaurants: true,
+                users: true,
+                shippers: { include: { users: true } }
+            },
             orderBy: { created_at: 'desc' },
         });
         res.json(orders);
@@ -75,7 +87,12 @@ export const getAssignedOrders = async (req, res) => {
 export const getAllOrders = async (req, res) => {
     try {
         const orders = await prisma.orders.findMany({
-            include: { order_items: { include: { foods: true } } },
+            include: { 
+                order_items: { include: { foods: true } },
+                restaurants: true,
+                users: true,
+                shippers: { include: { users: true } }
+            },
             orderBy: { created_at: 'desc' },
         });
         res.json(orders);

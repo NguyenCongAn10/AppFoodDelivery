@@ -22,6 +22,7 @@ model users {
   addresses   addresses[]
   cart_items  cart_items[]
   favorites   favorites[]
+  orders      orders[]
 }
 
 model addresses {
@@ -134,10 +135,15 @@ model orders {
   total_price   Decimal?      @default(0) @db.Decimal(10, 2)
   delivery_address String?
   payment_method   String?
+  delivery_lat     Float?
+  delivery_lng     Float?
+  shipper_lat      Float?
+  shipper_lng      Float?
   created_at    DateTime?     @default(now())
 
   restaurants restaurants   @relation(fields: [restaurant_id], references: [id])
   shippers    shippers?     @relation(fields: [shipper_id], references: [id])
+  users       users         @relation(fields: [user_uid], references: [uid])
   order_items order_items[]
 }
 

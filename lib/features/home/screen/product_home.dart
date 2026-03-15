@@ -3,13 +3,16 @@ import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/cart_item.dart';
 import 'package:delivery_apps/core/models/food_model.dart';
-import 'package:delivery_apps/core/models/product.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 
+import 'package:delivery_apps/features/favorites/provider/favorite_provider.dart';
 import 'package:delivery_apps/features/home/screen/product_detail_page.dart';
+import 'package:delivery_apps/features/cart/provider/cart_provider.dart';
 import 'package:delivery_apps/features/home/widget/categories_slider.dart';
+import 'package:delivery_apps/features/home/widget/food_options_bottom_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ProductHome extends StatefulWidget {
   const ProductHome({super.key});
@@ -20,7 +23,7 @@ class ProductHome extends StatefulWidget {
 
 class _ProductHomeState extends State<ProductHome> {
   final BackendService _backendService = BackendService();
-  List<Product> products = [];
+  List<FoodModel> foods = [];
   String selectedCategory = "";
   bool isLoading = true;
 
@@ -35,82 +38,25 @@ class _ProductHomeState extends State<ProductHome> {
     setState(() => isLoading = true);
     
     try {
-      // Load both foods and favorites to sync UI states
-      final List<FoodModel> foods =
+      final List<FoodModel> loadedFoods =
           await _backendService.getFoods(categoryId: categoryId);
       
-      List<Product> favs = [];
-      try {
-        favs = await _backendService.getFavorites();
-      } catch (_) {
-        // Ignore fav fetch errors so products still load if not logged in
-      }
-      final favIds = favs.map((e) => e.id).toSet();
-
-      final loadedProducts = foods.map((e) {
-        final p = Product.fromJson({
-          'id': e.id,
-          'name': e.name,
-          'image_url': e.imageUrl ?? '',
-          'price': e.price,
-          'description': e.description ?? '',
-          'restaurant_id': e.restaurantId,
-          'restaurant_name': e.restaurantName,
-        });
-
-        // Sync favorite states with backend
-        if (favIds.contains(p.id)) {
-          p.isFavorite.add('local'); // Legacy 'local' flag used in UI
-        }
-
-        return p;
-      }).toList();
-
       if (!mounted) return;
       setState(() {
-        products = loadedProducts;
+        foods = loadedFoods;
         isLoading = false;
       });
     } catch (e) {
       if (kDebugMode) debugPrint("Lỗi khi tải sản phẩm: $e");
       if (!mounted) return;
       setState(() {
-        products = [];
+        foods = [];
         isLoading = false;
       });
     }
   }
 
-  void _toggleFavorite(Product product) {
-    if (!mounted) return;
-    
-    _backendService.toggleFavorite(int.parse(product.id)).catchError((e) {
-      if (kDebugMode) debugPrint("Lỗi toggle backend favorite: $e");
-    });
-    
-    setState(() {
-      final index = products.indexWhere((p) => p.id == product.id);
-      if (index != -1) {
-        final current = products[index];
-        final newFav = List<String>.from(current.isFavorite);
-        const localId = 'local';
-        if (newFav.contains(localId)) {
-          newFav.remove(localId);
-        } else {
-          newFav.add(localId);
-        }
-        products[index] = Product(
-          id: current.id,
-          name: current.name,
-          imageUrl: current.imageUrl,
-          price: current.price,
-          isFavorite: newFav,
-          description: current.description,
-          categoryId: current.categoryId,
-        );
-      }
-    });
-  }
+
 
   void _onCategorySelected(String categoryId) {
     setState(() => selectedCategory = categoryId);
@@ -142,7 +88,7 @@ class _ProductHomeState extends State<ProductHome> {
               ? const SizedBox(
                   height: 200,
                   child: Center(child: CircularProgressIndicator()))
-              : products.isEmpty
+              : foods.isEmpty
                   ? SizedBox(
                       height: 200,
                       child: Center(
@@ -164,20 +110,19 @@ class _ProductHomeState extends State<ProductHome> {
                         crossAxisSpacing: 15,
                         mainAxisSpacing: 15,
                       ),
-                      itemCount: products.length,
+                      itemCount: foods.length,
                       itemBuilder: (context, index) {
-                        final product = products[index];
+                        final food = foods[index];
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ProductDetailPage(
-                                  product: product,
-                                  onToggleFavorite: _toggleFavorite,
+                                  food: food,
                                 ),
                               ),
-                            ).then((_) => _loadProducts());
+                            );
                           },
                           child: Container(
                             decoration: BoxDecoration(
@@ -202,12 +147,12 @@ class _ProductHomeState extends State<ProductHome> {
                                         borderRadius:
                                             const BorderRadius.vertical(
                                                 top: Radius.circular(20)),
-                                        child: product.imageUrl.isEmpty
+                                        child: (food.imageUrl ?? "").isEmpty
                                             ? const Center(
                                                 child:
                                                     CircularProgressIndicator())
                                             : CachedNetworkImage(
-                                                imageUrl: product.imageUrl,
+                                                imageUrl: food.imageUrl ?? "",
                                                 width: double.infinity,
                                                 height: double.infinity,
                                                 fit: BoxFit.cover,
@@ -226,37 +171,38 @@ class _ProductHomeState extends State<ProductHome> {
                                                         const Icon(Icons.error),
                                               ),
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Container(
-                                          width: 32,
-                                          height: 32,
-                                          decoration: BoxDecoration(
-                                              color:
-                                                  AppColor.container(context),
-                                              shape: BoxShape.circle,
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.1),
-                                                  blurRadius: 4,
-                                                )
-                                              ]),
-                                          child: IconButton(
-                                            onPressed: () =>
-                                                _toggleFavorite(product),
-                                            icon: Icon(
-                                              product.isLikedBy('local')
-                                                  ? Icons.favorite
-                                                  : Icons.favorite_border,
-                                              color: product.isLikedBy('local')
-                                                  ? Colors.red
-                                                  : Colors.grey,
-                                              size: 18,
+                                      Consumer<FavoriteProvider>(
+                                        builder: (context, favoriteProvider, child) {
+                                          final isFav = favoriteProvider.isFavorite(food.id);
+                                          return Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Container(
+                                              width: 32,
+                                              height: 32,
+                                              decoration: BoxDecoration(
+                                                  color:
+                                                      AppColor.container(context),
+                                                  shape: BoxShape.circle,
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withOpacity(0.1),
+                                                      blurRadius: 4,
+                                                    )
+                                                  ]),
+                                              child: IconButton(
+                                                onPressed: () =>
+                                                    favoriteProvider.toggleFavorite(food),
+                                                icon: Icon(
+                                                  isFav ? Icons.favorite : Icons.favorite_border,
+                                                  color: isFav ? Colors.red : AppColor.textSecondary(context),
+                                                  size: 18,
+                                                ),
+                                                padding: EdgeInsets.zero,
+                                              ),
                                             ),
-                                            padding: EdgeInsets.zero,
-                                          ),
-                                        ),
+                                          );
+                                        },
                                       )
                                     ],
                                   ),
@@ -268,7 +214,7 @@ class _ProductHomeState extends State<ProductHome> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        product.name,
+                                        food.name,
                                         style: AppTextStyle.bodyBold(context,
                                             fontSize: 13,
                                             color: AppColor.textTitle(context)),
@@ -276,9 +222,9 @@ class _ProductHomeState extends State<ProductHome> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       const SizedBox(height: 2),
-                                      if (product.restaurantName != null)
+                                      if (food.restaurantName != null)
                                         Text(
-                                          product.restaurantName!,
+                                          food.restaurantName!,
                                           style: AppTextStyle.body(context,
                                               fontSize: 11,
                                               color: AppColor.textSecondary(context)),
@@ -291,7 +237,7 @@ class _ProductHomeState extends State<ProductHome> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            "\$${product.price}",
+                                            "\$${food.price}",
                                             style: AppTextStyle.bodyBold(
                                                 context,
                                                 fontSize: 14,
@@ -308,19 +254,25 @@ class _ProductHomeState extends State<ProductHome> {
                                             ),
                                             child: IconButton(
                                               onPressed: () async {
+                                                if (food.optionGroups.isNotEmpty) {
+                                                  showModalBottomSheet(
+                                                    context: context,
+                                                    isScrollControlled: true,
+                                                    backgroundColor: Colors.transparent,
+                                                    builder: (context) => FoodOptionsBottomSheet(
+                                                      food: food,
+                                                      restaurantId: food.restaurantId,
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
+                                                
                                                 try {
-                                                  await _backendService
-                                                      .addToCart(CartItem(
-                                                    id: '', // Backend DB will auto-generate
-                                                    productId: product.id,
-                                                    restaurantId:
-                                                        product.categoryId ??
-                                                            '',
-                                                    name: product.name,
-                                                    imageUrl: product.imageUrl,
-                                                    price: product.price,
-                                                    quantity: "1",
-                                                  ));
+                                                  final cart = context
+                                                      .read<CartProvider>();
+                                                  await cart.addFood(
+                                                      food, food.restaurantId);
+                                                  
                                                   if (mounted) {
                                                     ScaffoldMessenger.of(
                                                             context)

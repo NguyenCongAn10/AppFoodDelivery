@@ -2,14 +2,14 @@ import 'dart:convert';
 import 'package:delivery_apps/core/models/place_result.dart';
 import 'package:delivery_apps/core/models/food_model.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
-import 'package:delivery_apps/core/models/product.dart';
 import 'package:delivery_apps/core/models/shipper_model.dart';
 import 'package:delivery_apps/core/models/user_model.dart';
 import 'package:delivery_apps/core/models/category_model.dart';
 import 'package:delivery_apps/core/models/address_model.dart';
 import 'package:delivery_apps/core/models/cart_item.dart';
 import 'package:delivery_apps/core/services/auth_repository.dart';
-import 'package:flutter/material.dart';
+import 'package:delivery_apps/core/models/restaurant_search_result.dart';
+import 'package:delivery_apps/core/models/restaurant_detail_model.dart';
 import 'package:http/http.dart' as http;
 
 class BackendService {
@@ -87,10 +87,79 @@ class BackendService {
     }
   }
 
+  Future<List<FoodModel>> getSearchSuggestions() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/search/suggestions'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final list = jsonDecode(response.body) as List<dynamic>;
+      return list
+          .map((e) => FoodModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      throw Exception(
+          'Failed to load search suggestions: ${response.statusCode}');
+    }
+  }
+
+  Future<List<RestaurantSearchResult>> searchRestaurantsByFood({
+    required String query,
+    double? latitude,
+    double? longitude,
+  }) async {
+    if (query.trim().isEmpty) return [];
+
+    final params = <String, String>{'q': query};
+    if (latitude != null && longitude != null) {
+      params['lat'] = latitude.toString();
+      params['lng'] = longitude.toString();
+    }
+
+    final uri = Uri.parse('$baseUrl/search/restaurants')
+        .replace(queryParameters: params);
+
+    final response = await http.get(
+      uri,
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final list = jsonDecode(response.body) as List<dynamic>;
+      return list
+          .map(
+              (e) => RestaurantSearchResult.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      throw Exception(
+          'Failed to search restaurants: ${response.statusCode} - ${response.body}');
+    }
+  }
+
+  Future<RestaurantDetailModel> getRestaurantDetail(int id) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/restaurants/$id'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return RestaurantDetailModel.fromJson(data);
+    } else {
+      throw Exception(
+          'Failed to load restaurant details: ${response.statusCode}');
+    }
+  }
+
 
   Future<OrderModel> createOrder({
     required int restaurantId,
-    required List<Map<String, int>> items, 
+    required List<Map<String, int>> items,
+    String? deliveryAddress,
+    String? paymentMethod,
+    double? lat,
+    double? lng,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/orders'),
@@ -98,6 +167,10 @@ class BackendService {
       body: jsonEncode({
         'restaurant_id': restaurantId,
         'items': items,
+        'address': deliveryAddress,
+        'payment_method': paymentMethod,
+        'lat': lat,
+        'lng': lng,
       }),
     );
 
@@ -211,7 +284,7 @@ class BackendService {
       if (body == null || (body is Map && body.isEmpty)) return null;
       return ShipperModel.fromJson(body as Map<String, dynamic>);
     } else if (response.statusCode == 404) {
-      return null; // Chưa đăng ký shipper
+      return null; 
     } else {
       throw Exception('Failed to get shipper profile: ${response.statusCode}');
     }
@@ -323,7 +396,6 @@ class BackendService {
     }
   }
 
-  // Address Methods
   Future<List<AddressModel>> getAddresses() async {
     final response = await http.get(
       Uri.parse('$baseUrl/addresses'),
@@ -424,6 +496,8 @@ class BackendService {
       body: jsonEncode({
         'food_id': int.tryParse(item.productId) ?? 0,
         'quantity': int.tryParse(item.quantity) ?? 1,
+        'selected_options':
+            item.selectedOptions.map((o) => o.toJson()).toList(),
       }),
     );
 
@@ -472,7 +546,7 @@ class BackendService {
     }
   }
 
-  Future<List<Product>> getFavorites() async {
+  Future<List<FoodModel>> getFavorites() async {
     final token = await _authRepo.getToken();
     if (token == null) throw Exception('Vui lòng đăng nhập');
 
@@ -485,14 +559,7 @@ class BackendService {
       final List<dynamic> data = json.decode(response.body);
       return data.map((jsonItem) {
         final food = jsonItem['foods'];
-        return Product.fromJson({
-          'id': food['id'],
-          'name': food['name'],
-          'image_url': food['image_url'] ?? '',
-          'price': food['price'],
-          'description': food['description'] ?? '',
-          'restaurant_id': food['restaurant_id'],
-        });
+        return FoodModel.fromJson(food);
       }).toList();
     } else {
       throw Exception('Lỗi lấy danh sách yêu thích');

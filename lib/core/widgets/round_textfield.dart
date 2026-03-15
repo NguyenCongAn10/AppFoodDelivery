@@ -8,6 +8,7 @@ class RoundTextField extends StatefulWidget {
   final bool obscureText;
   final Icon? preicon;
   final bool sufIcon;
+  final Widget? suffixIcon;
   final String? Function(String?)? validator;
   final Function(String)? onChanged;
   final EdgeInsetsGeometry? contentPadding;
@@ -18,6 +19,7 @@ class RoundTextField extends StatefulWidget {
     this.textEditingController,
     this.preicon,
     required this.sufIcon,
+    this.suffixIcon,
     required this.obscureText,
     this.validator,
     this.onChanged,
@@ -47,19 +49,20 @@ class _RoundTextFieldState extends State<RoundTextField> {
       decoration: InputDecoration(
         floatingLabelBehavior: FloatingLabelBehavior.never,
         prefixIcon: widget.preicon,
-        suffixIcon: widget.sufIcon
+        suffixIcon: widget.suffixIcon ??
+            (widget.sufIcon
             ? IconButton(
-          onPressed: () {
-            setState(() {
-              isObscure = !isObscure;
-            });
-          },
-          icon: Icon(
-            isObscure ? Icons.visibility_off : Icons.visibility,
-            color: Colors.grey,
-          ),
-        )
-            : null,
+                    onPressed: () {
+                      setState(() {
+                        isObscure = !isObscure;
+                      });
+                    },
+                    icon: Icon(
+                      isObscure ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                  )
+                : null),
         label: Text(
           widget.hint,
           style: AppTextStyle.body(context, color: Colors.grey, fontSize: 17),

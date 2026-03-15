@@ -11,8 +11,8 @@ class UserModel {
   final String email;
   final UserRole role;
   final String? phone;
+  final String? avatarUrl;
   final DateTime createdAt;
-
   UserModel({
     required this.id,
     required this.uid,
@@ -20,18 +20,20 @@ class UserModel {
     required this.email,
     required this.role,
     this.phone,
+    this.avatarUrl,
     required this.createdAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'],
-      uid: json['uid'],
-      name: json['name'],
-      email: json['email'],
+      id: json['id'] ?? 0,
+      uid: json['uid'] ?? '',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
       role: UserRole.values.firstWhere((e) => e.toString().split('.').last == json['role'], orElse: () => UserRole.USER),
       phone: json['phone'],
-      createdAt: DateTime.parse(json['created_at']),
+      avatarUrl: json['avatar_url'],
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
     );
   }
 

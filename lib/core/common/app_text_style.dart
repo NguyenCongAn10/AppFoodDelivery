@@ -87,8 +87,8 @@ class AppTextStyle {
         fontFamily: "Metropolis",
         color: color ??
             (_isDark(context)
-                ? const Color(0xff7385FF)
-                : const Color(0xff2A26DA)), 
+                ? const Color(0xff1E6BFF)
+                : const Color(0xff0D6EFD)), 
         fontWeight: fontWeight ?? FontWeight.w500,
         fontSize: fontSize ?? 16,
         letterSpacing: letterSpacing,

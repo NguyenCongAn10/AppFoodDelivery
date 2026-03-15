@@ -1,5 +1,7 @@
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/providers/theme_provider.dart';
+import 'package:delivery_apps/features/cart/provider/cart_provider.dart';
+import 'package:delivery_apps/features/favorites/provider/favorite_provider.dart';
 import 'package:delivery_apps/features/home/providers/user_address_provider.dart';
 import 'package:delivery_apps/features/home/screen/startup_view.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -41,6 +43,8 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserAddressProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => FavoriteProvider()),
       ],
       child: ThemeProviderScope(
         provider: _themeProvider,

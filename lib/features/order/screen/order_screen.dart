@@ -4,6 +4,7 @@ import 'package:delivery_apps/core/models/order_model.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
+import 'package:delivery_apps/features/order/screen/order_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class OrderScreen extends StatefulWidget {
@@ -64,15 +65,15 @@ class _OrderScreenState extends State<OrderScreen> {
   String _statusLabel(OrderStatus status) {
     switch (status) {
       case OrderStatus.PENDING:
-        return 'Chờ xác nhận';
+        return 'Pending';
       case OrderStatus.CONFIRMED:
-        return 'Đã xác nhận';
+        return 'Confirmed';
       case OrderStatus.DELIVERING:
-        return 'Đang giao';
+        return 'Delivering';
       case OrderStatus.COMPLETED:
-        return 'Hoàn thành';
+        return 'Completed';
       case OrderStatus.CANCELLED:
-        return 'Đã hủy';
+        return 'Cancelled';
     }
   }
 
@@ -124,7 +125,7 @@ class _OrderScreenState extends State<OrderScreen> {
                               const SizedBox(height: 12),
                               TextButton(
                                 onPressed: _loadOrders,
-                                child: Text('Thử lại',
+                                child: Text('Try again',
                                     style: TextStyle(
                                         color: AppColor.primary(context))),
                               ),
@@ -141,7 +142,7 @@ class _OrderScreenState extends State<OrderScreen> {
                                       color: AppColor.textSecondary(context)),
                                   const SizedBox(height: 12),
                                     Text(
-                                      'Chưa có đơn hàng nào',
+                                    'No orders yet',
                                       style: AppTextStyle.body(context, color: AppColor.textSecondary(context), fontSize: 16),
                                     ),
                                 ],
@@ -154,95 +155,181 @@ class _OrderScreenState extends State<OrderScreen> {
                                 itemCount: _orders.length,
                                 itemBuilder: (context, index) {
                                   final order = _orders[index];
-                                  return Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    decoration: BoxDecoration(
-                                      color: AppColor.container(context),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // Header: Order ID + Status
-                                          Row(
-                                            children: [
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                        builder: (context) =>
+                                            OrderDetailScreen(order: order),
+                                      ));
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.only(bottom: 12),
+                                      decoration: BoxDecoration(
+                                        color: AppColor.container(context),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Header: Order ID + Status
+                                            Row(
+                                              children: [
                                                 Text(
-                                                  'Đơn #${order.id}',
-                                                  style: AppTextStyle.bodyBold(context, color: AppColor.textTitle(context), fontSize: 16),
+                                                  'Order #${order.id}',
+                                                  style: AppTextStyle.bodyBold(
+                                                      context,
+                                                      color: AppColor.textTitle(
+                                                          context),
+                                                      fontSize: 16),
                                                 ),
-                                              const Spacer(),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 10,
-                                                        vertical: 4),
-                                                decoration: BoxDecoration(
-                                                  color: _statusColor(
-                                                          order.status)
-                                                      .withOpacity(0.15),
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
-                                                child: Text(
-                                                  _statusLabel(order.status),
-                                                  style: TextStyle(
+                                                const Spacer(),
+                                                Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 4),
+                                                  decoration: BoxDecoration(
                                                     color: _statusColor(
-                                                        order.status),
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
+                                                            order.status)
+                                                        .withValues(
+                                                            alpha: 0.15),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                  ),
+                                                  child: Text(
+                                                    _statusLabel(order.status),
+                                                    style: TextStyle(
+                                                      color: _statusColor(
+                                                          order.status),
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 10),
-                                          // Items
-                                          if (order.items.isNotEmpty)
-                                            ...order.items.map((item) => Padding(
-                                                  padding: const EdgeInsets.only(
-                                                      bottom: 4),
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                          Icons
-                                                              .fastfood_outlined,
-                                                          size: 14,
+                                              ],
+                                            ),
+                                            if (order.deliveryAddress != null &&
+                                                order.deliveryAddress!
+                                                    .isNotEmpty) ...[
+                                              const SizedBox(height: 6),
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                      Icons
+                                                          .location_on_outlined,
+                                                      size: 14,
+                                                      color: AppColor
+                                                          .textSecondary(
+                                                              context)),
+                                                  const SizedBox(width: 6),
+                                                  Expanded(
+                                                    child: Text(
+                                                      order.deliveryAddress!,
+                                                      style: AppTextStyle.body(
+                                                          context,
                                                           color: AppColor
                                                               .textSecondary(
-                                                                  context)),
-                                                      const SizedBox(width: 6),
-                                                      Expanded(
+                                                                  context),
+                                                          fontSize: 13),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                            if (order.paymentMethod != null) ...[
+                                              const SizedBox(height: 6),
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.payment_outlined,
+                                                      size: 14,
+                                                      color: AppColor.textSecondary(context)),
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    'Paid via: ${order.paymentMethod}',
+                                                    style: AppTextStyle.body(context,
+                                                        color: AppColor.textSecondary(context),
+                                                        fontSize: 13),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                            const SizedBox(height: 10),
+                                            // Items
+                                            if (order.items.isNotEmpty)
+                                              ...order.items.map((item) =>
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            bottom: 4),
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                            Icons
+                                                                .fastfood_outlined,
+                                                            size: 14,
+                                                            color: AppColor
+                                                                .textSecondary(
+                                                                    context)),
+                                                        const SizedBox(
+                                                            width: 6),
+                                                        Expanded(
                                                           child: Text(
                                                             '${item.food?.name ?? 'Food #${item.foodId}'} x${item.quantity}',
-                                                            style: AppTextStyle.body(context, color: AppColor.textBody(context), fontSize: 14),
+                                                            style: AppTextStyle.body(
+                                                                context,
+                                                                color: AppColor
+                                                                    .textBody(
+                                                                        context),
+                                                                fontSize: 14),
                                                           ),
-                                                      ),
-                                                      Text(
-                                                        '\$${item.price.toStringAsFixed(2)}',
-                                                        style: AppTextStyle.accent(context, color: AppColor.textAccent(context), fontSize: 14),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                )),
-                                          const Divider(),
-                                          // Total + Date
-                                          Row(
-                                            children: [
+                                                        ),
+                                                        Text(
+                                                          '\$${item.price.toStringAsFixed(2)}',
+                                                          style: AppTextStyle.accent(
+                                                              context,
+                                                              color: AppColor
+                                                                  .textAccent(
+                                                                      context),
+                                                              fontSize: 14),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  )),
+                                            const Divider(),
+                                            // Total + Date
+                                            Row(
+                                              children: [
                                                 Text(
                                                   '${order.createdAt.day}/${order.createdAt.month}/${order.createdAt.year}',
-                                                  style: AppTextStyle.body(context, color: AppColor.textSecondary(context), fontSize: 13),
+                                                  style: AppTextStyle.body(
+                                                      context,
+                                                      color: AppColor
+                                                          .textSecondary(
+                                                              context),
+                                                      fontSize: 13),
                                                 ),
-                                              const Spacer(),
+                                                const Spacer(),
                                                 Text(
                                                   'Total: \$${order.totalPrice.toStringAsFixed(2)}',
-                                                  style: AppTextStyle.bodyBold(context, color: AppColor.textTitle(context), fontSize: 15),
+                                                  style: AppTextStyle.bodyBold(
+                                                      context,
+                                                      color: AppColor.textTitle(
+                                                          context),
+                                                      fontSize: 15),
                                                 ),
-                                            ],
-                                          ),
-                                        ],
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   );
