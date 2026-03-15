@@ -12,7 +12,15 @@ export const getFoods = async (req, res) => {
 
         const foods = await prisma.foods.findMany({
             where: whereClause,
-            include: { restaurants: true, categories: true },
+            include: {
+                restaurants: true,
+                categories: true,
+                option_groups: {
+                    include: {
+                        options: true
+                    }
+                }
+            },
         });
         res.json(foods);
     } catch (err) {

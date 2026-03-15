@@ -1,14 +1,12 @@
 import admin from 'firebase-admin';
 import prisma from '../config/prisma.js';
 
-// Initialize Firebase Admin SDK (uses Application Default Credentials or env)
 if (!admin.apps.length) {
     admin.initializeApp({
         projectId: 'fooddelivery-f00aa',
     });
 }
 
-// Middleware: Verify Firebase ID Token and load user from DB
 export const authenticate = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;

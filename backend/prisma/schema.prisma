@@ -61,6 +61,7 @@ model restaurants {
   phone           String?
   is_open         Boolean?  @default(true)
   created_at      DateTime? @default(now())
+  image_url       String?
 
   users  users    @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
   foods  foods[]
@@ -80,11 +81,39 @@ model foods {
   is_available  Boolean?  @default(true)
   created_at    DateTime? @default(now())
 
-  restaurants restaurants   @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-  categories  categories?   @relation(fields: [category_id], references: [id], onDelete: SetNull)
-  order_items order_items[]
-  cart_items  cart_items[]
-  favorites   favorites[]
+  restaurants   restaurants          @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  categories    categories?          @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  order_items   order_items[]
+  cart_items    cart_items[]
+  favorites     favorites[]
+  option_groups food_option_groups[]
+}
+
+model food_option_groups {
+  id             Int            @id @default(autoincrement())
+  food_id        Int
+  name           String
+  is_required    Boolean        @default(false)
+  selection_type selection_type @default(SINGLE)
+
+  foods   foods          @relation(fields: [food_id], references: [id], onDelete: Cascade)
+  options food_options[]
+}
+
+model food_options {
+  id          Int     @id @default(autoincrement())
+  group_id    Int
+  name        String
+  price       Decimal @db.Decimal(10, 2)
+  description String?
+  image_url   String?
+
+  option_groups food_option_groups @relation(fields: [group_id], references: [id], onDelete: Cascade)
+}
+
+enum selection_type {
+  SINGLE
+  MULTIPLE
 }
 
 model categories {
@@ -103,6 +132,8 @@ model orders {
   shipper_id    Int?
   status        order_status? @default(PENDING)
   total_price   Decimal?      @default(0) @db.Decimal(10, 2)
+  delivery_address String?
+  payment_method   String?
   created_at    DateTime?     @default(now())
 
   restaurants restaurants   @relation(fields: [restaurant_id], references: [id])
@@ -116,6 +147,7 @@ model order_items {
   food_id  Int
   quantity Int
   price    Decimal @db.Decimal(10, 2)
+  selected_options Json?
 
   orders orders @relation(fields: [order_id], references: [id], onDelete: Cascade)
   foods  foods  @relation(fields: [food_id], references: [id])
@@ -141,13 +173,12 @@ model cart_items {
   food_id       Int
   restaurant_id Int
   quantity      Int       @default(1)
+  selected_options Json?
   created_at    DateTime? @default(now())
 
   users       users       @relation(fields: [user_uid], references: [uid], onDelete: Cascade)
   foods       foods       @relation(fields: [food_id], references: [id], onDelete: Cascade)
   restaurants restaurants @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-
-  @@unique([user_uid, food_id])
 }
 
 model favorites {

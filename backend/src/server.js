@@ -9,6 +9,8 @@ import categoryRouter from './routers/categoryRouter.js';
 import addressRouter from './routers/addressRouter.js';
 import cartRouter from './routers/cartRouter.js';
 import favoritesRouter from './routers/favoritesRouter.js';
+import searchRouter from './routers/searchRouter.js';
+import restaurantsRouter from './routers/restaurantsRouter.js';
 import prisma from './config/prisma.js';
 
 // Load environment variables
@@ -60,6 +62,8 @@ app.use('/api/categories', categoryRouter);
 app.use('/api/addresses', addressRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/favorites', favoritesRouter);
+app.use('/api/search', searchRouter);
+app.use('/api/restaurants', restaurantsRouter);
 
 // 404 handler
 app.use((req, res) => {

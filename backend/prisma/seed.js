@@ -97,7 +97,7 @@ async function main() {
       name: 'Whopper Jr.',
       description: 'The iconic Whopper in a smaller size.',
       price: 5.99,
-      image_url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd',
+      image_url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800',
     },
     {
       restaurant_id: restaurants[0].id,
@@ -105,7 +105,7 @@ async function main() {
       name: 'Bacon King',
       description: 'Two flame-grilled beef patties with crispy bacon.',
       price: 8.99,
-      image_url: 'https://images.unsplash.com/photo-1594212202875-c0528fb4ee8d',
+      image_url: 'https://images.unsplash.com/photo-1553979459-d2229ba7443b?auto=format&fit=crop&q=80&w=800',
     },
     {
       restaurant_id: restaurants[0].id,
@@ -113,7 +113,7 @@ async function main() {
       name: 'Crispy Chicken Sandwich',
       description: 'Seasoned white meat chicken filleted and breaded.',
       price: 6.49,
-      image_url: 'https://images.unsplash.com/photo-1606755962773-51322198083a',
+      image_url: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&q=80&w=800',
     },
     // Pizza Hut Foods
     {
@@ -122,7 +122,7 @@ async function main() {
       name: 'Pepperoni Lovers',
       description: 'Pepperoni, tomato sauce, and mozzarella cheese.',
       price: 12.99,
-      image_url: 'https://images.unsplash.com/photo-1628840042765-356cda07504e',
+      image_url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=800',
     },
     {
       restaurant_id: restaurants[1].id,
@@ -130,7 +130,7 @@ async function main() {
       name: 'Veggie Supreme',
       description: 'Mushrooms, green peppers, onions, tomatoes, and olives.',
       price: 11.99,
-      image_url: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add',
+      image_url: 'https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?auto=format&fit=crop&q=80&w=800',
     },
     // Sushi Bar Foods
     {
@@ -139,7 +139,7 @@ async function main() {
       name: 'Salmon Nigiri',
       description: 'Fresh salmon slices on top of vinegared rice.',
       price: 14.50,
-      image_url: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c',
+      image_url: 'https://images.unsplash.com/photo-1583623025817-d180a2221d0a?auto=format&fit=crop&q=80&w=800',
     },
     {
       restaurant_id: restaurants[2].id,
@@ -147,7 +147,7 @@ async function main() {
       name: 'California Roll',
       description: 'Crab, avocado, and cucumber wrapped in seaweed and rice.',
       price: 10.99,
-      image_url: 'https://images.unsplash.com/photo-1559466273-d95e72debaf8',
+      image_url: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?auto=format&fit=crop&q=80&w=800',
     },
   ];
 

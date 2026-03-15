@@ -28,7 +28,7 @@ export const getCart = async (req, res) => {
 export const addToCart = async (req, res) => {
   try {
     const user_uid = req.user.uid;
-    const { food_id, quantity } = req.body;
+    const { food_id, quantity, selected_options } = req.body;
 
     if (!food_id) {
       return res.status(400).json({ error: 'Thiếu thông tin món ăn' });
@@ -46,8 +46,7 @@ export const addToCart = async (req, res) => {
       return res.status(404).json({ error: 'Không tìm thấy món ăn' });
     }
 
-    // Check existing cart items to ensure single restaurant policy if needed
-    // In many apps, a cart can only belong to one restaurant
+    // Check existing cart items
     const existingItems = await prisma.cart_items.findMany({
       where: { user_uid },
       include: { foods: true }
@@ -63,27 +62,40 @@ export const addToCart = async (req, res) => {
       }
     }
 
-    // Upsert item
-    const item = await prisma.cart_items.upsert({
-      where: {
-        user_uid_food_id: {
-          user_uid,
-          food_id: parseInt(food_id)
-        }
-      },
-      update: {
-        quantity: { increment: qty }
-      },
-      create: {
-        user_uid,
-        food_id: parseInt(food_id),
-        restaurant_id: food.restaurant_id,
-        quantity: qty
-      },
-      include: {
-        foods: { include: { restaurants: true } }
-      }
+    // Manual merge logic: compare options
+    let existingItem = null;
+    const newOpts = selected_options || [];
+    
+    existingItem = existingItems.find(item => {
+        if (item.food_id !== parseInt(food_id)) return false;
+        
+        const itemOpts = item.selected_options || [];
+        if (itemOpts.length !== newOpts.length) return false;
+        
+        const itemOptIds = itemOpts.map(o => o.id).sort().join(',');
+        const newOptIds = newOpts.map(o => o.id).sort().join(',');
+        return itemOptIds === newOptIds;
     });
+
+    let item;
+    if (existingItem) {
+      item = await prisma.cart_items.update({
+        where: { id: existingItem.id },
+        data: { quantity: { increment: qty } },
+        include: { foods: { include: { restaurants: true } } }
+      });
+    } else {
+      item = await prisma.cart_items.create({
+        data: {
+          user_uid,
+          food_id: parseInt(food_id),
+          restaurant_id: food.restaurant_id,
+          quantity: qty,
+          selected_options: newOpts
+        },
+        include: { foods: { include: { restaurants: true } } }
+      });
+    }
 
     res.status(200).json(item);
   } catch (error) {
