@@ -11,6 +11,8 @@ import 'package:dotted_line/dotted_line.dart';
 import 'package:delivery_apps/features/home/providers/user_address_provider.dart';
 import 'package:delivery_apps/features/home/screen/user_address_screen.dart';
 import 'package:delivery_apps/features/cart/widget/payment_method_bottom_sheet.dart';
+import 'package:delivery_apps/core/models/user_model.dart';
+import 'package:delivery_apps/features/profile/screen/edit_profile.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -49,6 +51,7 @@ class _CartScreenState extends State<CartScreen> {
           .map((item) => {
                 'food_id': int.tryParse(item.productId) ?? 0,
                 'quantity': int.tryParse(item.quantity) ?? 1,
+                'selected_options': item.selectedOptions.map((o) => o.toJson()).toList(),
               })
           .toList();
 
@@ -60,7 +63,7 @@ class _CartScreenState extends State<CartScreen> {
 
       await BackendService().createOrder(
         restaurantId: restaurantIdInt,
-        items: items.cast<Map<String, int>>(),
+        items: items.cast<Map<String, dynamic>>(),
         deliveryAddress: deliveryAddress,
         paymentMethod: method.toString().split('.').last.toUpperCase(),
         lat: lat,
@@ -482,7 +485,7 @@ class _CartScreenState extends State<CartScreen> {
                                                   color: Colors.white,
                                                   fontSize: 17)),
                                           color: AppColor.primary(context),
-                                          onpress: () {
+                                          onpress: () async {
                                             final addressProvider =
                                                 Provider.of<UserAddressProvider>(
                                                     context,
@@ -501,18 +504,46 @@ class _CartScreenState extends State<CartScreen> {
                                               return;
                                             }
 
-                                            showModalBottomSheet(
-                                              context: context,
-                                              backgroundColor:
-                                                  Colors.transparent,
-                                              isScrollControlled: true,
-                                              builder: (context) =>
-                                                  PaymentMethodBottomSheet(
-                                                onSelected: (method) {
-                                                  _checkout(cart, method);
-                                                },
-                                              ),
-                                            );
+                                            // Check for phone number
+                                            try {
+                                              final user = await BackendService().getMe();
+                                              if (user.phone == null || user.phone!.trim().isEmpty) {
+                                                if (mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text("Please add your phone number to proceed with delivery"),
+                                                      backgroundColor: Colors.orange,
+                                                    ),
+                                                  );
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(builder: (_) => EditProfileScreen(user: user)),
+                                                  );
+                                                }
+                                                return;
+                                              }
+
+                                              if (mounted) {
+                                                showModalBottomSheet(
+                                                  context: context,
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                  isScrollControlled: true,
+                                                  builder: (context) =>
+                                                      PaymentMethodBottomSheet(
+                                                    onSelected: (method) {
+                                                      _checkout(cart, method);
+                                                    },
+                                                  ),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text("Error checking profile: $e"), backgroundColor: Colors.red),
+                                                );
+                                              }
+                                            }
                                           },
                                         ),
                                 ),

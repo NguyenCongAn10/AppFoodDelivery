@@ -34,12 +34,10 @@ class _RestaurantRegistrationViewState extends State<RestaurantRegistrationView>
     });
 
     try {
-      // Logic for restaurant registration. 
-      // If no explicit endpoint, you might just update User Role.
       final me = await _backendService.getMe();
       
-      // Update role explicitly if custom endpoint not yet ready
-      await _backendService.updateUser(me.id, role: 'RESTAURANT', phone: phoneController.text.trim());
+      await _backendService.updateUser(me.uid,
+          role: 'RESTAURANT', phone: phoneController.text.trim());
 
       final updatedUser = await _backendService.getMe();
 

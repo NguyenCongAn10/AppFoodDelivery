@@ -6,11 +6,13 @@ import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/core/widgets/round_icon_button.dart';
 import 'package:delivery_apps/core/services/firebase_auth_service.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
+import 'package:delivery_apps/features/profile/screen/edit_profile.dart';
 import 'package:delivery_apps/features/profile/screen/login_view.dart';
 import 'package:delivery_apps/features/home/screen/main_screen.dart';
 import 'package:delivery_apps/features/profile/screen/change_password_screen.dart';
 import 'package:delivery_apps/features/profile/screen/shipper_registration_view.dart';
 import 'package:delivery_apps/features/profile/screen/restaurant_registration_view.dart';
+import 'package:delivery_apps/features/home/screen/address_list_screen.dart';
 import 'package:delivery_apps/core/models/user_model.dart';
 import 'package:delivery_apps/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -144,9 +146,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           child: Column(
                             children: [
-                              _menuItem(context, Icons.edit, "Edit profile",
-                                  onTap: () {}),
-                              const SizedBox(height: 10),
+                                if (user != null)
+                                  _menuItem(context, Icons.edit_outlined,
+                                      "Edit profile", onTap: () async {
+                                    final result =
+                                        await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              EditProfileScreen(user: user!)),
+                                    );
+                                    if (result == true) {
+                                      _getCurrentUser();
+                                    }
+                                  }),
+                                const SizedBox(height: 10),
                               _menuItem(
                                   context,
                                   Icons.favorite_border_outlined,
@@ -159,7 +172,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               const SizedBox(height: 10),
                               _menuItem(context, Icons.location_on_outlined,
                                   "Location",
-                                  onTap: () {}),
+                                    onTap: () => Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const AddressListScreen()),
+                                        )),
                                 if (user?.role == UserRole.USER) ...[
                                   const SizedBox(height: 10),
                                   _menuItem(context, Icons.delivery_dining,
@@ -192,14 +209,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   onToggle: () =>
                                       themeProvider.toggleTheme(context),
                               ),
-                              const SizedBox(height: 10),
-                              _menuItem(
-                                  context, Icons.lock_outlined, "Change password",
-                                  onTap: () => Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                            builder: (_) =>
-                                                const ChangePasswordScreen()),
-                                      )),
+                                // const SizedBox(height: 10),
+                                // _menuItem(
+                                //     context, Icons.lock_outlined, "Change password",
+                                //     onTap: () => Navigator.of(context).push(
+                                //           MaterialPageRoute(
+                                //               builder: (_) =>
+                                //                   const ChangePasswordScreen()),
+                                //         )),
                               const SizedBox(height: 10),
                               _menuItem(context, Icons.logout_outlined, "Log out",
                                   onTap: () {

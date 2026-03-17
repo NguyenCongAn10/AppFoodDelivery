@@ -100,6 +100,7 @@ class OrderItemModel {
   final int quantity;
   final double price;
   final FoodModel? food;
+  final List<FoodOptionModel>? selectedOptions;
 
   OrderItemModel({
     required this.id,
@@ -108,6 +109,7 @@ class OrderItemModel {
     required this.quantity,
     required this.price,
     this.food,
+    this.selectedOptions,
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
@@ -120,6 +122,9 @@ class OrderItemModel {
           ? double.tryParse(json['price']) ?? 0.0 
           : (json['price'] as num?)?.toDouble() ?? 0.0,
       food: json['foods'] != null ? FoodModel.fromJson(json['foods']) : null,
+      selectedOptions: json['selected_options'] != null 
+          ? (json['selected_options'] as List).map((e) => FoodOptionModel.fromJson(e)).toList() 
+          : null,
     );
   }
 
@@ -130,6 +135,7 @@ class OrderItemModel {
       'food_id': foodId,
       'quantity': quantity,
       'price': price,
+      'selected_options': selectedOptions?.map((e) => e.toJson()).toList(),
     };
   }
 }

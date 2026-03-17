@@ -155,7 +155,7 @@ class BackendService {
 
   Future<OrderModel> createOrder({
     required int restaurantId,
-    required List<Map<String, int>> items,
+    required List<Map<String, dynamic>> items,
     String? deliveryAddress,
     String? paymentMethod,
     double? lat,
@@ -356,7 +356,7 @@ class BackendService {
   }
 
   Future<UserModel> updateUser(
-    int id, {
+    String uid, {
     String? name,
     String? email,
     String? phone,
@@ -370,7 +370,7 @@ class BackendService {
     };
 
     final response = await http.put(
-      Uri.parse('$baseUrl/user/$id'),
+      Uri.parse('$baseUrl/user/$uid'),
       headers: await _getHeaders(),
       body: jsonEncode(data),
     );

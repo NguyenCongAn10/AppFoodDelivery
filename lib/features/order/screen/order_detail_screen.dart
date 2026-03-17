@@ -4,6 +4,7 @@ import 'package:delivery_apps/core/models/order_model.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/features/order/widget/order_tracking_map.dart';
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 class OrderDetailScreen extends StatefulWidget {
   final OrderModel order;
@@ -54,13 +55,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final order = widget.order;
     final restaurant = order.restaurant;
 
-    // Use order coordinates if available, otherwise fallback to restaurant
     final resLat = restaurant?.latitude ?? 21.0285;
     final resLng = restaurant?.longitude ?? 105.8542;
     final destLat = order.deliveryLat ?? resLat;
     final destLng = order.deliveryLng ?? resLng;
     final shipperLat = order.shipperLat ?? (resLat + destLat) / 2;
     final shipperLng = order.shipperLng ?? (resLng + destLng) / 2;
+
+    final distance = calculateDistance(resLat, resLng, destLat, destLng);
 
     return Scaffold(
       backgroundColor: AppColor.inputFill(context),
@@ -145,13 +147,32 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           address: restaurant?.address ?? "Unknown Address",
                           color: AppColor.primary(context),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 17),
-                          child: Container(
-                            height: 30,
-                            width: 2,
-                            color: Colors.grey.withOpacity(0.2),
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              height: 20,
+                              child: VerticalDivider(
+                                  thickness: 1,
+                                  width: 20,
+                                  radius: BorderRadius.circular(10),
+                                  color: AppColor.textTitle(context)),
+                            ),
+                            Text(
+                              '${distance.toStringAsFixed(2)} km',
+                              style: AppTextStyle.body(context,
+                                  fontSize: 12,
+                                  color: AppColor.textSecondary(context)),
+                            ),
+                            SizedBox(
+                              height: 20,
+                              child: VerticalDivider(
+                                  radius: BorderRadius.circular(10),
+                                  thickness: 1,
+                                  width: 20,
+                                  color: AppColor.textTitle(context)),
+                            ),
+                          ],
                         ),
                         _buildLocationRow(
                           context,
@@ -167,7 +188,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Order Items Card
                   _buildSectionCard(
                     context,
                     title: "Order Items",
@@ -201,6 +221,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                           style: AppTextStyle.body(context,
                                               color: AppColor.textSecondary(context),
                                               fontSize: 12)),
+                                        if (item.selectedOptions != null &&
+                                            item.selectedOptions!.isNotEmpty)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 4),
+                                            child: Text(
+                                                item.selectedOptions!
+                                                    .map((e) => e.name)
+                                                    .join(", "),
+                                                style: AppTextStyle.body(
+                                                    context,
+                                                    color: AppColor.primary(
+                                                        context),
+                                                    fontSize: 12)),
+                                          ),
                                   ],
                                 ),
                               ),
@@ -307,5 +342,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         ],
       ),
     );
+  }
+
+  double calculateDistance(double lat1, double lng1, double lat2, double lng2) {
+    final dLat = (lat2 - lat1) * math.pi / 180;
+    final dLng = (lng2 - lng1) * math.pi / 180;
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.sin(dLng / 2) * math.sin(dLng / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    final d = 6378.1 * c;
+    return d;
   }
 }

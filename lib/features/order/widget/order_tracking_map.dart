@@ -84,8 +84,8 @@ class _OrderTrackingMapState extends State<OrderTrackingMap> {
     final destLat = widget.deliveryLat ?? widget.restaurantLat;
     final destLng = widget.deliveryLng ?? widget.restaurantLng;
     
-    final sLat = widget.shipperLat ?? (widget.restaurantLat + destLat) / 2;
-    final sLng = widget.shipperLng ?? (widget.restaurantLng + destLng) / 2;
+    final sLat = widget.restaurantLat;
+    final sLng = widget.restaurantLng;
 
     return Container(
       height: 250,

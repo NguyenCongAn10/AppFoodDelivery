@@ -3,7 +3,7 @@ import prisma from '../config/prisma.js';
 // POST /orders (user)
 export const createOrder = async (req, res) => {
     try {
-        const { restaurant_id, items, address, payment_method, lat, lng } = req.body; // items: [{ food_id, quantity }]
+        const { restaurant_id, items, address, payment_method, lat, lng } = req.body; 
         const user_uid = req.user.uid;
         
         let total_price = 0;
@@ -11,12 +11,28 @@ export const createOrder = async (req, res) => {
         
         for (const item of items) {
             const food = await prisma.foods.findUnique({ where: { id: item.food_id } });
-            const price = food.price * item.quantity;
-            total_price += price;
+            if (!food) {
+                console.warn(`Food with id ${item.food_id} not found`);
+                continue;
+            }
+
+            let itemPrice = Number(food.price);
+            
+            // Add price of selected options
+            if (item.selected_options && Array.isArray(item.selected_options)) {
+                item.selected_options.forEach(opt => {
+                    itemPrice += Number(opt.price || 0);
+                });
+            }
+
+            const totalPriceForItem = itemPrice * item.quantity;
+            total_price += totalPriceForItem;
+
             orderItems.push({
                 food_id: item.food_id,
                 quantity: item.quantity,
-                price,
+                price: itemPrice,
+                selected_options: item.selected_options || []
             });
         }
         
@@ -36,6 +52,7 @@ export const createOrder = async (req, res) => {
         
         res.status(201).json(order);
     } catch (err) {
+        console.error('Create order error:', err);
         res.status(500).json({ error: err.message });
     }
 };
