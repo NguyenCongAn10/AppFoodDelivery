@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.5",
     "mongu": "^3.1.0",
+    "nodemailer": "^8.0.2",
     "pg": "^8.17.2",
     "postgres": "^3.4.8"
   },

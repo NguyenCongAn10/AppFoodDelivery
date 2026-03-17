@@ -6,15 +6,27 @@ export const registerShipper = async (req, res) => {
         const { phone, vehicle_name, license_plate } = req.body;
         const user_uid = req.user.uid;
         
-        const shipper = await prisma.shippers.create({
-            data: { 
-                user_uid, 
-                phone, 
-                vehicle_name, 
-                license_plate 
-            },
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. Create shipper record
+            const shipper = await tx.shippers.create({
+                data: { 
+                    user_uid, 
+                    phone, 
+                    vehicle_name, 
+                    license_plate 
+                },
+            });
+
+            // 2. Update user role
+            await tx.users.update({
+                where: { uid: user_uid },
+                data: { role: 'SHIPPER' },
+            });
+
+            return shipper;
         });
-        res.status(201).json(shipper);
+
+        res.status(201).json(result);
     } catch (err) {
         if (err.code === 'P2002') {
             res.status(400).json({ error: 'License plate or user already registered as shipper' });

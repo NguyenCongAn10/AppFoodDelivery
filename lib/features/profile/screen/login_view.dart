@@ -195,9 +195,14 @@ class _LoginViewState extends State<LoginView> {
                             style: AppTextStyle.bodyBold(context)),
                       ),
                       RoundTextField(
-                        validator: (v) => v == null || v.isEmpty
-                            ? 'Please Enter Your Email'
-                            : null,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Please Enter Your Email';
+                          final bool emailValid = RegExp(
+                                  r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                              .hasMatch(v);
+                          if (!emailValid) return 'Please enter a valid email address';
+                          return null;
+                        },
                         hint: " Enter Your Email ",
                         obscureText: false,
                         textEditingController: emailController,
@@ -212,9 +217,11 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       RoundTextField(
                         hint: "Enter Your Password",
-                        validator: (v) => v == null || v.isEmpty
-                            ? 'Please Enter Your Password'
-                            : null,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Please Enter Your Password';
+                          if (v.length < 6) return 'Password must be at least 6 characters';
+                          return null;
+                        },
                         obscureText: true,
                         textEditingController: passwordController,
                         preicon: const Icon(Icons.lock_outlined),

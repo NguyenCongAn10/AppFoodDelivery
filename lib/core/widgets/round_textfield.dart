@@ -8,10 +8,11 @@ class RoundTextField extends StatefulWidget {
   final bool obscureText;
   final Icon? preicon;
   final bool sufIcon;
-  final Widget? suffixIcon;
+  final Widget? sufIconWidget;
   final String? Function(String?)? validator;
   final Function(String)? onChanged;
   final EdgeInsetsGeometry? contentPadding;
+  final TextInputType? keyboardType;
 
   const RoundTextField({
     super.key,
@@ -19,11 +20,12 @@ class RoundTextField extends StatefulWidget {
     this.textEditingController,
     this.preicon,
     required this.sufIcon,
-    this.suffixIcon,
+    this.sufIconWidget,
     required this.obscureText,
     this.validator,
     this.onChanged,
     this.contentPadding,
+    this.keyboardType,
   });
 
   @override
@@ -46,10 +48,11 @@ class _RoundTextFieldState extends State<RoundTextField> {
       obscureText: isObscure,
       validator: widget.validator,
       onChanged: widget.onChanged,
+      keyboardType: widget.keyboardType,
       decoration: InputDecoration(
         floatingLabelBehavior: FloatingLabelBehavior.never,
         prefixIcon: widget.preicon,
-        suffixIcon: widget.suffixIcon ??
+        suffixIcon: widget.sufIconWidget ??
             (widget.sufIcon
             ? IconButton(
                     onPressed: () {
@@ -79,9 +82,18 @@ class _RoundTextFieldState extends State<RoundTextField> {
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide(color: AppColor.primary(context), width: 2),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Colors.red, width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
         filled: true,
         fillColor: AppColor.inputFill(context),
         isDense: true,
+        errorStyle: const TextStyle(height: 0.8),
         contentPadding: widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       ),
     );

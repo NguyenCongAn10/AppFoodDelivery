@@ -6,6 +6,7 @@ import 'package:delivery_apps/core/services/firebase_auth_service.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/core/services/auth_repository.dart';
 import 'package:delivery_apps/features/profile/screen/login_view.dart';
+import 'package:delivery_apps/features/profile/screen/otp_verification_view.dart';
 import 'package:delivery_apps/core/router/app_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -64,15 +65,20 @@ class _SignUpViewState extends State<SignUpView> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Registered Successfully',
-                style: AppTextStyle.body(context,
-                    color: AppColor.textBody(context))),
-            backgroundColor: AppColor.primary(context),
-          ),
-        );
-        await AppRouter.routeAfterLogin(context);
+        // Send OTP via Email
+        try {
+          await BackendService().sendOtp(email);
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => OTPVerificationView(email: email),
+              ),
+            );
+          }
+        } catch (e) {
+          setState(() => errorMessage = 'Failed to send OTP: $e');
+        }
       }
     } on FirebaseException catch (e) {
       final msg = switch (e.code) {
@@ -122,8 +128,14 @@ class _SignUpViewState extends State<SignUpView> {
                 _label(context, 'Email'),
                 RoundTextField(
                   textEditingController: emailController,
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Please enter your email' : null,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Please enter your email';
+                    final bool emailValid = RegExp(
+                            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                        .hasMatch(v);
+                    if (!emailValid) return 'Please enter a valid email address';
+                    return null;
+                  },
                   hint: 'Enter your email',
                   obscureText: false,
                   sufIcon: false,
@@ -153,8 +165,11 @@ class _SignUpViewState extends State<SignUpView> {
                 _label(context, 'Password'),
                 RoundTextField(
                   textEditingController: passwordController,
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Please enter your password' : null,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Please enter your password';
+                    if (v.length < 6) return 'Password must be at least 6 characters';
+                    return null;
+                  },
                   hint: 'Enter password',
                   obscureText: true,
                   sufIcon: true,

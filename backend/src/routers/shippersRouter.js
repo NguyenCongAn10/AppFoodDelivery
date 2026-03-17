@@ -4,7 +4,7 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/register', authenticate, authorize(['SHIPPER']), registerShipper);
+router.post('/register', authenticate, registerShipper);
 router.get('/me', authenticate, authorize(['SHIPPER']), getMyShipper);
 router.patch('/me', authenticate, authorize(['SHIPPER']), updateMyShipper);
 

@@ -173,7 +173,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         Icons.search,
                         color: AppColor.textTitle(context),
                       ),
-                      suffixIcon: _searchController.text.isNotEmpty
+                      sufIconWidget: _searchController.text.isNotEmpty
                           ? GestureDetector(
                               onTap: () {
                                 setState(() {

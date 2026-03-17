@@ -74,3 +74,39 @@ export const getRestaurantById = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+// POST /shippers/register
+export const registerRestaurant = async (req, res) => {
+    try {
+        const { restaurant_name, address, latitude, longitude, phone } = req.body;
+        const user_uid = req.user.uid;
+
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. Create restaurant record
+            const restaurant = await tx.restaurants.create({
+                data: {
+                    user_uid,
+                    restaurant_name,
+                    address,
+                    latitude: latitude || 0,
+                    longitude: longitude || 0,
+                    phone,
+                    image_url: "https://via.placeholder.com/150", // Default image
+                },
+            });
+
+            // 2. Update user role
+            await tx.users.update({
+                where: { uid: user_uid },
+                data: { role: 'RESTAURANT' },
+            });
+
+            return restaurant;
+        });
+
+        res.status(201).json(result);
+    } catch (err) {
+        console.error('Register restaurant error:', err);
+        res.status(500).json({ error: err.message });
+    }
+};

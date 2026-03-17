@@ -26,25 +26,31 @@ class _ShipperRegistrationViewState extends State<ShipperRegistrationView> {
   String _errorMessage = '';
 
   Future<void> _registerShipper() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = '';
     });
 
     try {
-      // 1. Register shipper in backend
+      // 1. Register shipper in backend (This now updates role atomically)
       await _backendService.registerShipper(
         phone: phoneController.text.trim(),
         vehicleName: vehicleController.text.trim(),
         licensePlate: licensePlateController.text.trim(),
       );
 
-      // 2. Fetch updated user profile specifically to get updated role
+      // 2. Fetch updated user profile to get the new 'SHIPPER' role
       final updatedUser = await _backendService.getMe();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration successful!'), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text('Registration successful!',
+                style: AppTextStyle.body(context, color: Colors.white)),
+            backgroundColor: Colors.green,
+          ),
         );
         // Navigate to shipper dashboard
         Navigator.of(context).pushAndRemoveUntil(
@@ -53,7 +59,8 @@ class _ShipperRegistrationViewState extends State<ShipperRegistrationView> {
         );
       }
     } catch (e) {
-      setState(() => _errorMessage = e.toString());
+      setState(
+          () => _errorMessage = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -65,60 +72,70 @@ class _ShipperRegistrationViewState extends State<ShipperRegistrationView> {
       backgroundColor: AppColor.inputFill(context),
       appBar: AppBar(
         title: Text("Become a Shipper", style: AppTextStyle.title(context)),
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: Center(
-            child: RoundIconCircle(
-              icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColor.textTitle(context)),
-              onTap: () => Navigator.pop(context),
-            ),
-          ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new,
+              color: AppColor.textTitle(context)),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Join our fleet and earn by delivering food!", style: AppTextStyle.body(context)),
+              Text(
+                "Join our fleet and earn by delivering food!",
+                style: AppTextStyle.body(context),
+              ),
               const SizedBox(height: 30),
               
-              Text("Phone Number", style: AppTextStyle.bodyBold(context)),
+              _label("Phone Number"),
               RoundTextField(
                 textEditingController: phoneController,
                 hint: "Enter your phone number",
-                validator: (v) => v!.isEmpty ? "Required" : null,
+                validator: (v) =>
+                    v!.isEmpty ? "Please enter your phone number" : null,
                 obscureText: false,
                 sufIcon: false,
+                preicon: const Icon(Icons.phone_outlined),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 20),
 
-              Text("Vehicle Name", style: AppTextStyle.bodyBold(context)),
+              _label("Vehicle Name"),
               RoundTextField(
                 textEditingController: vehicleController,
                 hint: "e.g. Honda Alpha",
-                validator: (v) => v!.isEmpty ? "Required" : null,
+                validator: (v) =>
+                    v!.isEmpty ? "Please enter your vehicle name" : null,
                 obscureText: false,
                 sufIcon: false,
+                preicon: const Icon(Icons.motorcycle_outlined),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 20),
 
-              Text("License Plate", style: AppTextStyle.bodyBold(context)),
+              _label("License Plate"),
               RoundTextField(
                 textEditingController: licensePlateController,
                 hint: "e.g. 29-H1 12345",
-                validator: (v) => v!.isEmpty ? "Required" : null,
+                validator: (v) =>
+                    v!.isEmpty ? "Please enter your license plate" : null,
                 obscureText: false,
                 sufIcon: false,
+                preicon: const Icon(Icons.badge_outlined),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 30),
 
               if (_errorMessage.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 15),
-                  child: Text(_errorMessage, style: const TextStyle(color: Colors.red)),
+                  child: Text(
+                    _errorMessage,
+                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                  ),
                 ),
 
               _isLoading 
@@ -126,15 +143,22 @@ class _ShipperRegistrationViewState extends State<ShipperRegistrationView> {
                 : RoundButton(
                     txt: Text("Register", style: AppTextStyle.bodyBold(context, color: Colors.white)),
                     color: AppColor.primary(context),
-                    onpress: () {
-                      if (_formKey.currentState!.validate()) {
-                        _registerShipper();
-                      }
-                    },
+                      onpress: _registerShipper,
                   ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _label(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 5),
+      child: Text(
+        text,
+        style:
+            AppTextStyle.bodyBold(context, color: AppColor.textTitle(context)),
       ),
     );
   }
