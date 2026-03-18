@@ -1,9 +1,9 @@
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/providers/theme_provider.dart';
-import 'package:delivery_apps/features/cart/provider/cart_provider.dart';
-import 'package:delivery_apps/features/favorites/provider/favorite_provider.dart';
-import 'package:delivery_apps/features/home/providers/user_address_provider.dart';
-import 'package:delivery_apps/features/home/screen/startup_view.dart';
+import 'package:delivery_apps/features/user/cart/provider/cart_provider.dart';
+import 'package:delivery_apps/features/user/favorites/provider/favorite_provider.dart';
+import 'package:delivery_apps/features/user/home/providers/user_address_provider.dart';
+import 'package:delivery_apps/features/user/home/screen/startup_view.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

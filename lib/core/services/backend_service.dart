@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:delivery_apps/core/models/place_result.dart';
 import 'package:delivery_apps/core/models/food_model.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
+import 'package:delivery_apps/core/models/restaurant_model.dart';
 import 'package:delivery_apps/core/models/shipper_model.dart';
 import 'package:delivery_apps/core/models/user_model.dart';
 import 'package:delivery_apps/core/models/category_model.dart';
@@ -22,7 +23,7 @@ class BackendService {
 
   BackendService._internal();
 
-  static const String baseUrl = 'http://192.168.1.82:3000/api';
+  static const String baseUrl = 'http://192.168.116.26:3000/api';
 
   final _authRepo = AuthRepository();
 
@@ -811,6 +812,117 @@ class BackendService {
       }
     } catch (e, stack) {
       _logError('registerRestaurant', e, stack);
+      rethrow;
+    }
+  }
+
+  // Restaurant Specific Methods
+  Future<List<OrderModel>> getRestaurantOrders() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/orders/restaurant'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        return list.map((e) => OrderModel.fromJson(e as Map<String, dynamic>)).toList();
+      } else {
+        throw Exception('Failed to get restaurant orders: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      _logError('getRestaurantOrders', e, stack);
+      rethrow;
+    }
+  }
+
+  Future<RestaurantModel> getMyRestaurant() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/restaurants/me'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return RestaurantModel.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to get my restaurant profile: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      _logError('getMyRestaurantProfile', e, stack);
+      rethrow;
+    }
+  }
+
+  Future<RestaurantModel> updateRestaurantStatus(bool isOpen) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/restaurants/me/status'),
+        headers: await _getHeaders(),
+        body: jsonEncode({'is_open': isOpen}),
+      );
+
+      if (response.statusCode == 200) {
+        return RestaurantModel.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to update restaurant status: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      _logError('updateRestaurantStatus', e, stack);
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> createFood(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/foods'),
+        headers: await _getHeaders(),
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 201) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to create food: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      _logError('createFood', e, stack);
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> updateFood(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/foods/$id'),
+        headers: await _getHeaders(),
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to update food: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      _logError('updateFood', e, stack);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteFood(int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/foods/$id'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode != 204) {
+        throw Exception('Failed to delete food: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      _logError('deleteFood', e, stack);
       rethrow;
     }
   }
