@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-    createOrder, getMyOrders, getAssignedOrders, getAllOrders,
+    createOrder, getMyOrders, getAssignedOrders, getAllOrders, getRestaurantOrders,
     cancelOrder, confirmOrder, assignShipper, pickupOrder, completeOrder
 } from '../controllers/ordersController.js';
 import { authenticate, authorize } from '../middleware/auth.js';
@@ -10,6 +10,7 @@ const router = express.Router();
 router.post('/', authenticate, authorize(['USER']), createOrder);
 router.get('/me', authenticate, authorize(['USER']), getMyOrders);
 router.get('/assigned', authenticate, authorize(['SHIPPER']), getAssignedOrders);
+router.get('/restaurant', authenticate, authorize(['RESTAURANT']), getRestaurantOrders);
 router.get('/', authenticate, authorize(['ADMIN']), getAllOrders);
 router.patch('/:id/cancel', authenticate, authorize(['USER']), cancelOrder);
 router.patch('/:id/confirm', authenticate, authorize(['RESTAURANT']), confirmOrder);

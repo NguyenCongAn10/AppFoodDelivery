@@ -205,3 +205,26 @@ export const completeOrder = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+// GET /orders/restaurant (restaurant)
+export const getRestaurantOrders = async (req, res) => {
+    try {
+        const restaurant = await prisma.restaurants.findFirst({ where: { user_uid: req.user.uid } });
+        if (!restaurant) {
+            return res.status(404).json({ error: 'Restaurant profile not found' });
+        }
+        
+        const orders = await prisma.orders.findMany({
+            where: { restaurant_id: restaurant.id },
+            include: { 
+                order_items: { include: { foods: true } },
+                users: true,
+                shippers: { include: { users: true } }
+            },
+            orderBy: { created_at: 'desc' },
+        });
+        res.json(orders);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};

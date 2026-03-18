@@ -110,3 +110,52 @@ export const registerRestaurant = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+// GET /api/restaurants/me
+export const getMyRestaurant = async (req, res) => {
+    try {
+        const user_uid = req.user.uid;
+        const restaurant = await prisma.restaurants.findFirst({
+            where: { user_uid },
+            include: {
+                foods: {
+                    include: {
+                        categories: true,
+                    },
+                },
+            },
+        });
+
+        if (!restaurant) {
+            return res.status(404).json({ error: 'Restaurant not found' });
+        }
+
+        res.json(restaurant);
+    } catch (error) {
+        console.error('Error fetching my restaurant:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// PATCH /api/restaurants/me/status
+export const updateRestaurantStatus = async (req, res) => {
+    try {
+        const { is_open } = req.body;
+        const user_uid = req.user.uid;
+
+        const restaurant = await prisma.restaurants.findFirst({ where: { user_uid } });
+        if (!restaurant) {
+            return res.status(404).json({ error: 'Restaurant not found' });
+        }
+
+        const updated = await prisma.restaurants.update({
+            where: { id: restaurant.id },
+            data: { is_open },
+        });
+
+        res.json(updated);
+    } catch (err) {
+        console.error('Update restaurant status error:', err);
+        res.status(500).json({ error: err.message });
+    }
+};
