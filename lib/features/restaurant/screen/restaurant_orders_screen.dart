@@ -4,6 +4,9 @@ import 'package:delivery_apps/features/restaurant/widget/order_action_bottom_she
 import 'package:delivery_apps/features/restaurant/widget/restaurant_order_card.dart';
 import 'package:flutter/material.dart';
 
+import 'package:delivery_apps/core/models/order_model.dart';
+import 'package:delivery_apps/core/services/backend_service.dart';
+
 class RestaurantOrdersScreen extends StatefulWidget {
   const RestaurantOrdersScreen({super.key});
 
@@ -13,51 +16,51 @@ class RestaurantOrdersScreen extends StatefulWidget {
 
 class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final BackendService _backendService = BackendService();
 
-  final List<RestaurantOrder> _allOrders = [
-    RestaurantOrder(
-      orderId: '3',
-      orderNumber: '0220',
-      time: '04:50 PM',
-      customerName: 'Alice Nguyen',
-      customerPhone: '+1 555 123 456',
-      address: '15 River Road, Mumbai',
-      items: [RestaurantOrderItem(name: 'Dal Tadka', quantity: 2, price: 250)],
-      totalBill: 250,
-      paymentMode: 'Online',
-      status: RestaurantOrderStatus.completed,
-    ),
-    RestaurantOrder(
-      orderId: '4',
-      orderNumber: '0219',
-      time: '03:30 PM',
-      customerName: 'John Smith',
-      address: '8 Park Lane, Mumbai',
-      items: [RestaurantOrderItem(name: 'Veg Biryani', quantity: 1, price: 200)],
-      totalBill: 200,
-      paymentMode: 'Cash',
-      status: RestaurantOrderStatus.cancelled,
-    ),
-    RestaurantOrder(
-      orderId: '5',
-      orderNumber: '0218',
-      time: '02:15 PM',
-      customerName: 'Priya Sharma',
-      address: '22 Hill View, Mumbai',
-      items: [
-        RestaurantOrderItem(name: 'Butter Chicken', quantity: 1, price: 220),
-        RestaurantOrderItem(name: 'Garlic Naan', quantity: 3, price: 60),
-      ],
-      totalBill: 280,
-      paymentMode: 'Online',
-      status: RestaurantOrderStatus.completed,
-    ),
-  ];
+  List<OrderModel> _allOrders = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _fetchOrders();
+  }
+
+  Future<void> _fetchOrders() async {
+    setState(() => _isLoading = true);
+    try {
+      final orders = await _backendService.getRestaurantOrders();
+      setState(() {
+        _allOrders = orders;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error fetching orders: $e');
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load orders')),
+        );
+      }
+    }
+  }
+
+  Future<void> _updateOrderStatus(OrderModel order, String action) async {
+    try {
+      // Show loading overlay or simply await
+      await _backendService.updateOrderStatus(order.id, action);
+      // Refresh the list
+      _fetchOrders();
+    } catch (e) {
+      debugPrint('Error updating order: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update order')),
+        );
+      }
+    }
   }
 
   @override
@@ -66,15 +69,19 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> with Si
     super.dispose();
   }
 
-  List<RestaurantOrder> _filterByStatus(RestaurantOrderStatus status) =>
+  List<OrderModel> _filterByStatus(OrderStatus status) =>
       _allOrders.where((o) => o.status == status).toList();
 
-  void _openOrderDetail(RestaurantOrder order) {
+  void _openOrderDetail(OrderModel order) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => OrderActionBottomSheet(order: order),
+      builder: (_) => OrderActionBottomSheet(
+        order: order,
+        onAccept: () => _updateOrderStatus(order, 'confirm'),
+        onReject: () => _updateOrderStatus(order, 'cancel'),
+      ),
     );
   }
 
@@ -98,40 +105,56 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> with Si
           tabs: const [Tab(text: 'All'), Tab(text: 'Completed'), Tab(text: 'Cancelled')],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildOrderList(_allOrders),
-          _buildOrderList(_filterByStatus(RestaurantOrderStatus.completed)),
-          _buildOrderList(_filterByStatus(RestaurantOrderStatus.cancelled)),
-        ],
-      ),
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : TabBarView(
+            controller: _tabController,
+            children: [
+              _buildOrderList(_allOrders),
+              _buildOrderList(_filterByStatus(OrderStatus.COMPLETED)),
+              _buildOrderList(_filterByStatus(OrderStatus.CANCELLED)),
+            ],
+          ),
     );
   }
 
-  Widget _buildOrderList(List<RestaurantOrder> orders) {
+  Widget _buildOrderList(List<OrderModel> orders) {
     if (orders.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.receipt_long_outlined, size: 60, color: AppColor.textSecondary(context).withOpacity(0.3)),
-            const SizedBox(height: 12),
-            Text('No orders found', style: AppTextStyle.body(context, color: AppColor.textSecondary(context))),
-          ],
+      return RefreshIndicator(
+        onRefresh: _fetchOrders,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.6,
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.receipt_long_outlined, size: 60, color: AppColor.textSecondary(context).withValues(alpha: 0.3)),
+                const SizedBox(height: 12),
+                Text('No orders found', style: AppTextStyle.body(context, color: AppColor.textSecondary(context))),
+              ],
+            ),
+          ),
         ),
       );
     }
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: orders.length,
-      itemBuilder: (_, index) {
-        final order = orders[index];
-        return RestaurantOrderCard(
-          order: order,
-          onMoreTap: () => _openOrderDetail(order),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: _fetchOrders,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: orders.length,
+        itemBuilder: (_, index) {
+          final order = orders[index];
+          return RestaurantOrderCard(
+            order: order,
+            onMoreTap: () => _openOrderDetail(order),
+            onAccept: () => _updateOrderStatus(order, 'confirm'),
+            onReject: () => _updateOrderStatus(order, 'cancel'),
+          );
+        },
+      ),
     );
   }
 }

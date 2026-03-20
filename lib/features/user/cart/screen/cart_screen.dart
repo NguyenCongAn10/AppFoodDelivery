@@ -4,9 +4,7 @@ import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/core/widgets/round_button.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/features/user/cart/provider/cart_provider.dart';
-import 'package:delivery_apps/features/user/home/screen/home_screen.dart';
 import 'package:delivery_apps/features/user/home/screen/main_screen.dart';
-import 'package:delivery_apps/features/user/order/screen/order_screen.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:delivery_apps/features/user/home/providers/user_address_provider.dart';
 import 'package:delivery_apps/features/user/home/screen/user_address_screen.dart';
@@ -174,8 +172,7 @@ class _CartScreenState extends State<CartScreen> {
                                       child: const Icon(Icons.delete,
                                           color: Colors.white),
                                     ),
-                                    child: Container(
-                                      child: Card(
+                                    child: Card(
                                         margin: const EdgeInsets.symmetric(
                                             horizontal: 8, vertical: 4),
                                         shadowColor: Colors.transparent,
@@ -289,7 +286,7 @@ class _CartScreenState extends State<CartScreen> {
                                                         .symmetric(
                                                         horizontal: 8),
                                                     child: Text(
-                                                        "${item.quantity}",
+                                                        item.quantity,
                                                         style: AppTextStyle.body(
                                                             context,
                                                             color: AppColor
@@ -335,7 +332,6 @@ class _CartScreenState extends State<CartScreen> {
                                             ],
                                           ),
                                         ),
-                                      ),
                                     ),
                                   );
                                 }),
@@ -523,26 +519,24 @@ class _CartScreenState extends State<CartScreen> {
                                                 return;
                                               }
 
-                                              if (mounted) {
-                                                showModalBottomSheet(
-                                                  context: context,
-                                                  backgroundColor:
-                                                      Colors.transparent,
-                                                  isScrollControlled: true,
-                                                  builder: (context) =>
-                                                      PaymentMethodBottomSheet(
-                                                    onSelected: (method) {
-                                                      _checkout(cart, method);
-                                                    },
-                                                  ),
-                                                );
-                                              }
+                                              if (!context.mounted) return;
+                                              showModalBottomSheet(
+                                                context: context,
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                isScrollControlled: true,
+                                                builder: (context) =>
+                                                    PaymentMethodBottomSheet(
+                                                  onSelected: (method) {
+                                                    _checkout(cart, method);
+                                                  },
+                                                ),
+                                              );
                                             } catch (e) {
-                                              if (mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text("Error checking profile: $e"), backgroundColor: Colors.red),
-                                                );
-                                              }
+                                              if (!context.mounted) return;
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text("Error checking profile: $e"), backgroundColor: Colors.red),
+                                              );
                                             }
                                           },
                                         ),

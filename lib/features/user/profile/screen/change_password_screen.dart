@@ -73,8 +73,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         SnackBar(content: Text('Đổi mật khẩu thất bại: $message')),
       );
     } finally {
-      if (!mounted) return;
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -132,8 +133,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 toggle: () => setState(() => _obscureNew = !_obscureNew),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Enter new password';
-                  if (v.length < 6)
+                  if (v.length < 6) {
                     return 'Password must be at least 6 characters';
+                  }
                   return null;
                 },
               ),
@@ -145,8 +147,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 toggle: () =>
                     setState(() => _obscureConfirm = !_obscureConfirm),
                 validator: (v) {
-                  if (v == null || v.isEmpty)
+                  if (v == null || v.isEmpty) {
                     return 'Confirm your new password';
+                  }
                   if (v != _newCtrl.text) return 'Passwords do not match';
                   return null;
                 },

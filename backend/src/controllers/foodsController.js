@@ -31,7 +31,7 @@ export const getFoods = async (req, res) => {
 // POST /foods (admin or restaurant)
 export const createFood = async (req, res) => {
     try {
-        let { restaurant_id, name, description, price, image_url, category_id } = req.body;
+        let { restaurant_id, name, description, price, image_url, category_id, option_groups } = req.body;
         
         if (req.user.role === 'RESTAURANT') {
             const restaurant = await prisma.restaurants.findFirst({
@@ -50,8 +50,28 @@ export const createFood = async (req, res) => {
                 description, 
                 price: parseFloat(price), 
                 image_url,
-                category_id: category_id ? parseInt(category_id, 10) : null
+                category_id: category_id ? parseInt(category_id, 10) : null,
+                option_groups: option_groups && Array.isArray(option_groups) ? {
+                    create: option_groups.map(g => ({
+                        name: g.name,
+                        is_required: g.is_required || false,
+                        selection_type: g.selection_type || 'SINGLE',
+                        options: {
+                            create: g.options?.map(o => ({
+                                name: o.name,
+                                price: parseFloat(o.price || 0),
+                                description: o.description,
+                                image_url: o.image_url
+                            })) || []
+                        }
+                    }))
+                } : undefined
             },
+            include: {
+                option_groups: {
+                    include: { options: true }
+                }
+            }
         });
         res.status(201).json(food);
     } catch (err) {
@@ -79,16 +99,61 @@ export const updateFood = async (req, res) => {
             }
         }
 
-        if (data.price) data.price = parseFloat(data.price);
-        if (data.category_id) data.category_id = parseInt(data.category_id, 10);
+        const option_groups = data.option_groups;
+        delete data.option_groups;
+
+        if (data.price !== undefined) data.price = parseFloat(data.price);
+        if (data.category_id !== undefined) data.category_id = parseInt(data.category_id, 10) || null;
         if (data.restaurant_id) delete data.restaurant_id;
 
-        const updatedFood = await prisma.foods.update({
+        if (option_groups && Array.isArray(option_groups)) {
+            await prisma.$transaction(async (tx) => {
+                await tx.food_option_groups.deleteMany({
+                    where: { food_id: foodId }
+                });
+
+                await tx.foods.update({
+                    where: { id: foodId },
+                    data: {
+                        ...data,
+                        option_groups: {
+                            create: option_groups.map(g => ({
+                                name: g.name,
+                                is_required: g.is_required || false,
+                                selection_type: g.selection_type || 'SINGLE',
+                                options: {
+                                    create: g.options?.map(o => ({
+                                        name: o.name,
+                                        price: parseFloat(o.price || 0),
+                                        description: o.description,
+                                        image_url: o.image_url
+                                    })) || []
+                                }
+                            }))
+                        }
+                    }
+                });
+            });
+        } else {
+            if (Object.keys(data).length > 0) {
+                await prisma.foods.update({
+                    where: { id: foodId },
+                    data,
+                });
+            }
+        }
+
+        const updatedFood = await prisma.foods.findUnique({
             where: { id: foodId },
-            data,
+            include: {
+                option_groups: {
+                    include: { options: true }
+                }
+            }
         });
         res.json(updatedFood);
     } catch (err) {
+        console.error('Update food error:', err);
         res.status(500).json({ error: err.message });
     }
 };

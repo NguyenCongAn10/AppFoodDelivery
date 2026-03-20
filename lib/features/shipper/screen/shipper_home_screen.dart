@@ -1,7 +1,10 @@
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
-import 'package:delivery_apps/features/restaurant/widget/restaurant_order_card.dart';
+import 'package:delivery_apps/core/models/food_model.dart';
+import 'package:delivery_apps/core/models/order_model.dart';
+import 'package:delivery_apps/core/models/user_model.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 // Reuse RestaurantOrder for delivery orders (same data model works for shipper view)
 class ShipperHomeScreen extends StatelessWidget {
@@ -10,32 +13,98 @@ class ShipperHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final availableOrders = [
-      RestaurantOrder(
-        orderId: '10',
-        orderNumber: '0230',
-        time: '06:00 PM',
-        customerName: 'Michael Chen',
-        customerPhone: '+1 444 555 666',
-        address: '99 Blossom St, Mumbai',
-        items: [RestaurantOrderItem(name: 'Butter Chicken', quantity: 2, price: 440)],
-        totalBill: 440,
-        paymentMode: 'Online',
-        status: RestaurantOrderStatus.ready,
-      ),
-      RestaurantOrder(
-        orderId: '11',
-        orderNumber: '0229',
-        time: '05:45 PM',
-        customerName: 'Sarah Johnson',
-        customerPhone: '+1 222 333 444',
-        address: '5 Elm Drive, Mumbai',
+      OrderModel(
+        id: 10,
+        userUid: 'u1',
+        restaurantId: 1,
+        status: OrderStatus.DELIVERING, // Ready to be picked up
+        totalPrice: 440,
+        deliveryAddress: '99 Blossom St, Mumbai',
+        paymentMethod: 'Online',
+        createdAt: DateTime.now().subtract(const Duration(minutes: 60)),
+        user: UserModel(
+          id: 1,
+          uid: 'u1',
+          name: 'Michael Chen',
+          email: 'm@c.com',
+          phone: '+1 444 555 666',
+          role: UserRole.USER,
+          createdAt: DateTime.now(),
+        ),
         items: [
-          RestaurantOrderItem(name: 'Veg Biryani', quantity: 1, price: 200),
-          RestaurantOrderItem(name: 'Raita', quantity: 1, price: 30),
+          OrderItemModel(
+            id: 1,
+            orderId: 10,
+            foodId: 1,
+            quantity: 2,
+            price: 220,
+            food: FoodModel(
+              id: 1,
+              restaurantId: 1,
+              categoryId: 1,
+              name: 'Butter Chicken',
+              description: '',
+              price: 220,
+              isAvailable: true,
+              createdAt: DateTime.now(),
+            ),
+          )
         ],
-        totalBill: 230,
-        paymentMode: 'Cash',
-        status: RestaurantOrderStatus.ready,
+      ),
+      OrderModel(
+        id: 11,
+        userUid: 'u2',
+        restaurantId: 1,
+        status: OrderStatus.DELIVERING,
+        totalPrice: 230,
+        deliveryAddress: '5 Elm Drive, Mumbai',
+        paymentMethod: 'Cash',
+        createdAt: DateTime.now().subtract(const Duration(minutes: 45)),
+        user: UserModel(
+          id: 2,
+          uid: 'u2',
+          name: 'Sarah Johnson',
+          email: 's@j.com',
+          phone: '+1 222 333 444',
+          role: UserRole.USER,
+          createdAt: DateTime.now(),
+        ),
+        items: [
+          OrderItemModel(
+            id: 2,
+            orderId: 11,
+            foodId: 2,
+            quantity: 1,
+            price: 200,
+            food: FoodModel(
+              id: 2,
+              restaurantId: 1,
+              categoryId: 1,
+              name: 'Veg Biryani',
+              description: '',
+              price: 200,
+              isAvailable: true,
+              createdAt: DateTime.now(),
+            ),
+          ),
+          OrderItemModel(
+            id: 3,
+            orderId: 11,
+            foodId: 3,
+            quantity: 1,
+            price: 30,
+            food: FoodModel(
+              id: 3,
+              restaurantId: 1,
+              categoryId: 1,
+              name: 'Raita',
+              description: '',
+              price: 30,
+              isAvailable: true,
+              createdAt: DateTime.now(),
+            ),
+          ),
+        ],
       ),
     ];
 
@@ -59,7 +128,7 @@ class ShipperHomeScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.delivery_dining_outlined, size: 70, color: AppColor.textSecondary(context).withOpacity(0.3)),
+                  Icon(Icons.delivery_dining_outlined, size: 70, color: AppColor.textSecondary(context).withValues(alpha: 0.3)),
                   const SizedBox(height: 14),
                   Text('No deliveries available', style: AppTextStyle.body(context, color: AppColor.textSecondary(context))),
                 ],
@@ -78,18 +147,19 @@ class ShipperHomeScreen extends StatelessWidget {
 }
 
 class _DeliveryCard extends StatelessWidget {
-  final RestaurantOrder order;
+  final OrderModel order;
   const _DeliveryCard({required this.order});
 
   @override
   Widget build(BuildContext context) {
+    final timeStr = DateFormat('hh:mm a').format(order.createdAt);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColor.container(context),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,14 +167,14 @@ class _DeliveryCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                '#${order.orderNumber}  •  ${order.time}',
+                '#${order.id.toString().padLeft(4, '0')}  •  $timeStr',
                 style: AppTextStyle.bodyBold(context, color: AppColor.primary(context), fontSize: 13),
               ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text('Ready', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12)),
@@ -117,7 +187,7 @@ class _DeliveryCard extends StatelessWidget {
               const Icon(Icons.location_on_outlined, size: 16, color: Colors.red),
               const SizedBox(width: 6),
               Expanded(
-                child: Text(order.address, style: AppTextStyle.body(context, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                child: Text(order.deliveryAddress ?? 'No Address', style: AppTextStyle.body(context, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ],
           ),
@@ -126,9 +196,9 @@ class _DeliveryCard extends StatelessWidget {
             children: [
               const Icon(Icons.person_outline, size: 16, color: Colors.blue),
               const SizedBox(width: 6),
-              Text(order.customerName, style: AppTextStyle.body(context, fontSize: 13)),
+              Text(order.user?.name ?? 'Guest User', style: AppTextStyle.body(context, fontSize: 13)),
               const Spacer(),
-              Text('Rs. ${order.totalBill.toStringAsFixed(0)}', style: AppTextStyle.bodyBold(context, fontSize: 14)),
+              Text('Rs. ${order.totalPrice.toStringAsFixed(0)}', style: AppTextStyle.bodyBold(context, fontSize: 14)),
             ],
           ),
           const SizedBox(height: 14),

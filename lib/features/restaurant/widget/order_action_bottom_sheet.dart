@@ -3,8 +3,11 @@ import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/features/restaurant/widget/restaurant_order_card.dart';
 import 'package:flutter/material.dart';
 
+import 'package:delivery_apps/core/models/order_model.dart';
+import 'package:intl/intl.dart';
+
 class OrderActionBottomSheet extends StatelessWidget {
-  final RestaurantOrder order;
+  final OrderModel order;
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
   final VoidCallback? onReady;
@@ -19,9 +22,8 @@ class OrderActionBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPending = order.status == RestaurantOrderStatus.pending;
-    final isAccepted = order.status == RestaurantOrderStatus.accepted ||
-        order.status == RestaurantOrderStatus.preparing;
+    final isPending = order.status == OrderStatus.PENDING;
+    final isAccepted = order.status == OrderStatus.CONFIRMED;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -52,12 +54,12 @@ class OrderActionBottomSheet extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Order #${order.orderNumber}',
+                    'Order #${order.id.toString().padLeft(4, '0')}',
                     style: AppTextStyle.bodyBold(context, fontSize: 20),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    order.time,
+                    DateFormat('hh:mm a').format(order.createdAt),
                     style: AppTextStyle.body(context, fontSize: 13, color: AppColor.textSecondary(context)),
                   ),
                 ],
@@ -76,15 +78,15 @@ class OrderActionBottomSheet extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _infoRow(context, Icons.person_outline, 'Customer', order.customerName),
-                if (order.customerPhone != null) ...[
+                _infoRow(context, Icons.person_outline, 'Customer', order.user?.name ?? 'Guest'),
+                if (order.user?.phone != null) ...[
                   const SizedBox(height: 10),
-                  _infoRow(context, Icons.phone_outlined, 'Phone', order.customerPhone!),
+                  _infoRow(context, Icons.phone_outlined, 'Phone', order.user!.phone!),
                 ],
                 const SizedBox(height: 10),
-                _infoRow(context, Icons.location_on_outlined, 'Address', order.address),
+                _infoRow(context, Icons.location_on_outlined, 'Address', order.deliveryAddress ?? 'Unknown'),
                 const SizedBox(height: 10),
-                _infoRow(context, Icons.payment_outlined, 'Payment', order.paymentMode),
+                _infoRow(context, Icons.payment_outlined, 'Payment', order.paymentMethod ?? 'CASH'),
               ],
             ),
           ),
@@ -109,9 +111,9 @@ class OrderActionBottomSheet extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(item.name, style: AppTextStyle.body(context, fontSize: 14))),
+                  Expanded(child: Text(item.food?.name ?? 'Item', style: AppTextStyle.body(context, fontSize: 14))),
                   Text(
-                    'Rs. ${(item.price * item.quantity).toStringAsFixed(0)}',
+                    '\$${(item.price * item.quantity).toStringAsFixed(0)}',
                     style: AppTextStyle.bodyBold(context, fontSize: 14),
                   ),
                 ],
@@ -124,7 +126,7 @@ class OrderActionBottomSheet extends StatelessWidget {
             children: [
               Text('Total Bill', style: AppTextStyle.bodyBold(context, fontSize: 15)),
               Text(
-                'Rs. ${order.totalBill.toStringAsFixed(0)}',
+                '\$${order.totalPrice.toStringAsFixed(0)}',
                 style: AppTextStyle.bodyBold(context, fontSize: 15, color: AppColor.primary(context)),
               ),
             ],
@@ -179,24 +181,24 @@ class OrderActionBottomSheet extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  final RestaurantOrderStatus status;
+  final OrderStatus status;
   const _StatusBadge({required this.status});
 
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
-      RestaurantOrderStatus.pending => ('Pending', Colors.orange),
-      RestaurantOrderStatus.accepted || RestaurantOrderStatus.preparing => ('Preparing', Colors.blue),
-      RestaurantOrderStatus.ready => ('Ready', Colors.teal),
-      RestaurantOrderStatus.completed => ('Completed', Colors.green),
-      RestaurantOrderStatus.cancelled => ('Cancelled', Colors.red),
+      OrderStatus.PENDING => ('Pending', Colors.orange),
+      OrderStatus.CONFIRMED => ('Accepted', Colors.blue),
+      OrderStatus.DELIVERING => ('Delivering', Colors.teal),
+      OrderStatus.COMPLETED => ('Completed', Colors.green),
+      OrderStatus.CANCELLED => ('Cancelled', Colors.red),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
     );

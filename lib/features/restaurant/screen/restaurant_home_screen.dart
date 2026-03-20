@@ -20,7 +20,7 @@ class _RestaurantHomeScreenState extends State<RestaurantHomeScreen> {
   final BackendService _backendService = BackendService();
   bool _isLoading = true;
   RestaurantModel? _restaurant;
-  List<RestaurantOrder> _orders = [];
+  List<OrderModel> _orders = [];
 
   @override
   void initState() {
@@ -37,7 +37,7 @@ class _RestaurantHomeScreenState extends State<RestaurantHomeScreen> {
       if (mounted) {
         setState(() {
           _restaurant = restaurant;
-          _orders = orderModels.map((m) => _mapToRestaurantOrder(m)).toList();
+          _orders = orderModels;
           _isLoading = false;
         });
       }
@@ -47,60 +47,20 @@ class _RestaurantHomeScreenState extends State<RestaurantHomeScreen> {
     }
   }
 
-  RestaurantOrder _mapToRestaurantOrder(OrderModel model) {
-    return RestaurantOrder(
-      orderId: model.id.toString(),
-      orderNumber: model.id.toString().padLeft(4, '0'),
-      time: DateFormat('hh:mm a').format(model.createdAt),
-      customerName: model.user?.name ?? 'Guest User',
-      customerPhone: model.user?.phone,
-      address: model.deliveryAddress ?? 'No Address',
-      items: model.items.map((i) => RestaurantOrderItem(
-        name: i.food?.name ?? 'Unknown Item',
-        quantity: i.quantity,
-        price: i.price,
-      )).toList(),
-      totalBill: model.totalPrice,
-      paymentMode: model.paymentMethod ?? 'Unknown',
-      status: _mapStatus(model.status),
-    );
-  }
-
-  RestaurantOrderStatus _mapStatus(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.PENDING: return RestaurantOrderStatus.pending;
-      case OrderStatus.CONFIRMED: return RestaurantOrderStatus.accepted;
-      case OrderStatus.DELIVERING: return RestaurantOrderStatus.ready;
-      case OrderStatus.COMPLETED: return RestaurantOrderStatus.completed;
-      case OrderStatus.CANCELLED: return RestaurantOrderStatus.cancelled;
-    }
-  }
-
-  OrderStatus _mapToBackendStatus(RestaurantOrderStatus status) {
-    switch (status) {
-      case RestaurantOrderStatus.pending: return OrderStatus.PENDING;
-      case RestaurantOrderStatus.accepted: 
-      case RestaurantOrderStatus.preparing:
-        return OrderStatus.CONFIRMED;
-      case RestaurantOrderStatus.ready: return OrderStatus.DELIVERING;
-      case RestaurantOrderStatus.completed: return OrderStatus.COMPLETED;
-      case RestaurantOrderStatus.cancelled: return OrderStatus.CANCELLED;
-    }
-  }
-
   int get _totalOrders => _orders.length;
-  int get _completedOrders => _orders.where((o) => o.status == RestaurantOrderStatus.completed).length;
-  int get _cancelledOrders => _orders.where((o) => o.status == RestaurantOrderStatus.cancelled).length;
+  int get _completedOrders =>
+      _orders.where((o) => o.status == OrderStatus.COMPLETED).length;
+  int get _cancelledOrders =>
+      _orders.where((o) => o.status == OrderStatus.CANCELLED).length;
 
-  List<RestaurantOrder> get _currentOrders => _orders
+  List<OrderModel> get _currentOrders => _orders
       .where((o) =>
-          o.status == RestaurantOrderStatus.pending ||
-          o.status == RestaurantOrderStatus.accepted ||
-          o.status == RestaurantOrderStatus.preparing ||
-          o.status == RestaurantOrderStatus.ready)
+          o.status == OrderStatus.PENDING ||
+          o.status == OrderStatus.CONFIRMED ||
+          o.status == OrderStatus.DELIVERING)
       .toList();
 
-  void _openOrderDetail(RestaurantOrder order) {
+  void _openOrderDetail(OrderModel order) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -109,31 +69,25 @@ class _RestaurantHomeScreenState extends State<RestaurantHomeScreen> {
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: OrderActionBottomSheet(
           order: order,
-          onAccept: () => _updateOrderStatus(order, RestaurantOrderStatus.accepted),
-          onReject: () => _updateOrderStatus(order, RestaurantOrderStatus.cancelled),
-          onReady: () => _updateOrderStatus(order, RestaurantOrderStatus.ready),
+          onAccept: () => _updateOrderStatus(order, 'confirm'),
+          onReject: () => _updateOrderStatus(order, 'cancel'),
+          onReady: () => _updateOrderStatus(order, 'ready'),
         ),
       ),
     );
   }
 
-  Future<void> _updateOrderStatus(RestaurantOrder order, RestaurantOrderStatus newStatus) async {
+  Future<void> _updateOrderStatus(OrderModel order, String action) async {
     try {
-      final backendStatus = _mapToBackendStatus(newStatus);
-      String action = 'confirm'; // default
-      if (backendStatus == OrderStatus.CANCELLED) action = 'cancel';
-      if (backendStatus == OrderStatus.DELIVERING) action = 'ready'; // for backend ready means delivering if we map like this
-
-      await _backendService.updateOrderStatus(int.parse(order.orderId), action);
+      await _backendService.updateOrderStatus(order.id, action);
       
-      setState(() {
-        order.status = newStatus;
-        // If it was cancelled or completed, it will be filtered out of current orders
-      });
+      _fetchData(); // Simplest way to sync state
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Order ${order.orderNumber} updated to ${newStatus.name}')),
+          SnackBar(
+              content: Text(
+                  'Order #${order.id.toString().padLeft(4, '0')} updated')),
         );
       }
     } catch (e) {
@@ -226,7 +180,7 @@ class _RestaurantHomeScreenState extends State<RestaurantHomeScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.white.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -253,7 +207,7 @@ class _RestaurantHomeScreenState extends State<RestaurantHomeScreen> {
                         const SizedBox(width: 8),
                         CircleAvatar(
                           radius: 18,
-                          backgroundColor: Colors.white.withOpacity(0.2),
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
                           child: const Icon(Icons.person, color: Colors.white, size: 20),
                         )
                       ],
@@ -307,7 +261,10 @@ class _RestaurantHomeScreenState extends State<RestaurantHomeScreen> {
                     child: Center(
                       child: Column(
                         children: [
-                          Icon(Icons.receipt_long_outlined, size: 60, color: AppColor.textSecondary(context).withOpacity(0.4)),
+                          Icon(Icons.receipt_long_outlined,
+                              size: 60,
+                              color: AppColor.textSecondary(context)
+                                  .withValues(alpha: 0.4)),
                           const SizedBox(height: 12),
                           Text('No active orders', style: AppTextStyle.body(context, color: AppColor.textSecondary(context))),
                         ],
@@ -323,9 +280,9 @@ class _RestaurantHomeScreenState extends State<RestaurantHomeScreen> {
                       return RestaurantOrderCard(
                         order: order,
                         onMoreTap: () => _openOrderDetail(order),
-                        onAccept: () => _updateOrderStatus(order, RestaurantOrderStatus.accepted),
-                        onReject: () => _updateOrderStatus(order, RestaurantOrderStatus.cancelled),
-                        onReady: () => _updateOrderStatus(order, RestaurantOrderStatus.ready),
+                        onAccept: () => _updateOrderStatus(order, 'confirm'),
+                        onReject: () => _updateOrderStatus(order, 'cancel'),
+                        onReady: () => _updateOrderStatus(order, 'ready'),
                       );
                     },
                     childCount: _currentOrders.length,

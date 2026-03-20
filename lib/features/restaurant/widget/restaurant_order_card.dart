@@ -2,44 +2,11 @@ import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:flutter/material.dart';
 
-enum RestaurantOrderStatus { pending, accepted, preparing, ready, completed, cancelled }
-
-class RestaurantOrderItem {
-  final String name;
-  final int quantity;
-  final double price;
-
-  const RestaurantOrderItem({required this.name, required this.quantity, required this.price});
-}
-
-class RestaurantOrder {
-  final String orderId;
-  final String orderNumber;
-  final String time;
-  final String customerName;
-  final String? customerPhone;
-  final String address;
-  final List<RestaurantOrderItem> items;
-  final double totalBill;
-  final String paymentMode;
-  RestaurantOrderStatus status;
-
-  RestaurantOrder({
-    required this.orderId,
-    required this.orderNumber,
-    required this.time,
-    required this.customerName,
-    this.customerPhone,
-    required this.address,
-    required this.items,
-    required this.totalBill,
-    required this.paymentMode,
-    this.status = RestaurantOrderStatus.pending,
-  });
-}
+import 'package:intl/intl.dart';
+import 'package:delivery_apps/core/models/order_model.dart';
 
 class RestaurantOrderCard extends StatelessWidget {
-  final RestaurantOrder order;
+  final OrderModel order;
   final VoidCallback onMoreTap;
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
@@ -56,9 +23,8 @@ class RestaurantOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPending = order.status == RestaurantOrderStatus.pending;
-    final isAccepted = order.status == RestaurantOrderStatus.accepted ||
-        order.status == RestaurantOrderStatus.preparing;
+    final isPending = order.status == OrderStatus.PENDING;
+    final isAccepted = order.status == OrderStatus.CONFIRMED;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -82,7 +48,7 @@ class RestaurantOrderCard extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  '${order.orderNumber}  |  ${order.time}',
+                  '${order.id.toString().padLeft(4, '0')}  |  ${DateFormat('hh:mm a').format(order.createdAt)}',
                   style: AppTextStyle.bodyBold(context, color: AppColor.primary(context), fontSize: 13),
                 ),
                 const Spacer(),
@@ -96,7 +62,7 @@ class RestaurantOrderCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 16, bottom: 10),
             child: Text(
-              order.customerName,
+              order.user?.name ?? 'Guest',
               style: AppTextStyle.body(context, color: AppColor.primary(context), fontSize: 13),
             ),
           ),
@@ -107,9 +73,9 @@ class RestaurantOrderCard extends StatelessWidget {
               child: Row(
                 children: [
                   Text('${item.quantity} X  ', style: AppTextStyle.body(context, fontSize: 14)),
-                  Expanded(child: Text(item.name, style: AppTextStyle.body(context, fontSize: 14))),
+                  Expanded(child: Text(item.food?.name ?? 'Item', style: AppTextStyle.body(context, fontSize: 14))),
                   Text(
-                    'Rs. ${item.price.toStringAsFixed(0)}',
+                    '\$${(item.price * item.quantity).toStringAsFixed(0)}',
                     style: AppTextStyle.bodyBold(context, fontSize: 14),
                   ),
                 ],
@@ -123,12 +89,12 @@ class RestaurantOrderCard extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  'Total Bill: Rs. ${order.totalBill.toStringAsFixed(0)}',
+                  'Total Bill: \$${order.totalPrice.toStringAsFixed(0)}',
                   style: AppTextStyle.body(context, fontSize: 13, color: AppColor.textSecondary(context)),
                 ),
                 const Spacer(),
                 Text(
-                  'Payment Mode: ${order.paymentMode}',
+                  'Payment Mode: ${order.paymentMethod ?? 'CASH'}',
                   style: AppTextStyle.body(context, fontSize: 13, color: AppColor.textSecondary(context)),
                 ),
               ],
@@ -175,16 +141,16 @@ class RestaurantOrderCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: order.status == RestaurantOrderStatus.completed
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                  color: order.status == OrderStatus.COMPLETED
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : (order.status == OrderStatus.CANCELLED ? Colors.red.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1)),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
-                    order.status == RestaurantOrderStatus.completed ? 'COMPLETED' : 'CANCELLED',
+                    order.status.name.toUpperCase(),
                     style: TextStyle(
-                      color: order.status == RestaurantOrderStatus.completed ? Colors.green : Colors.red,
+                      color: order.status == OrderStatus.COMPLETED ? Colors.green : (order.status == OrderStatus.CANCELLED ? Colors.red : Colors.blue),
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),

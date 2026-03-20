@@ -17,6 +17,9 @@ export const getRestaurantById = async (req, res) => {
                     where: { is_available: true },
                     include: {
                         categories: true,
+                        option_groups: {
+                            include: { options: true }
+                        }
                     },
                 },
             },
@@ -45,6 +48,7 @@ export const getRestaurantById = async (req, res) => {
                 is_available: food.is_available,
                 category_id: food.category_id,
                 category_name: food.categories?.name,
+                option_groups: food.option_groups,
             });
         });
 
@@ -121,6 +125,9 @@ export const getMyRestaurant = async (req, res) => {
                 foods: {
                     include: {
                         categories: true,
+                        option_groups: {
+                            include: { options: true }
+                        }
                     },
                 },
             },

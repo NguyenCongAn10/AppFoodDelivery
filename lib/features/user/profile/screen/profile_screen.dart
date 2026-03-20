@@ -9,11 +9,10 @@ import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/features/user/profile/screen/edit_profile.dart';
 import 'package:delivery_apps/features/user/profile/screen/login_view.dart';
 import 'package:delivery_apps/features/user/home/screen/main_screen.dart';
-import 'package:delivery_apps/features/user/profile/screen/change_password_screen.dart';
-import 'package:delivery_apps/features/user/profile/screen/shipper_registration_view.dart';
 import 'package:delivery_apps/features/user/profile/screen/restaurant_registration_view.dart';
 import 'package:delivery_apps/features/user/home/screen/address_list_screen.dart';
 import 'package:delivery_apps/core/models/user_model.dart';
+import 'package:delivery_apps/features/user/profile/screen/shipper_registration_view.dart';
 import 'package:delivery_apps/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +26,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   UserModel? user;
-  final FirebaseAuthService _firebaseService = FirebaseAuthService();
 
   @override
   void initState() {
@@ -58,7 +56,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context).size;
     final themeProvider = ThemeProviderScope.of(context);
-    final isDark = themeProvider.isDark;
 
     return Scaffold(
       backgroundColor: AppColor.container(context),
@@ -149,6 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 if (user != null)
                                   _menuItem(context, Icons.edit_outlined,
                                       "Edit profile", onTap: () async {
+                                    if (!context.mounted) return;
                                     final result =
                                         await Navigator.of(context).push(
                                       MaterialPageRoute(
@@ -219,8 +217,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 //         )),
                               const SizedBox(height: 10),
                               _menuItem(context, Icons.logout_outlined, "Log out",
-                                  onTap: () {
-                                FirebaseAuth.instance.signOut();
+                                    onTap: () async {
+                                  await FirebaseAuth.instance.signOut();
+                                  if (!context.mounted) return;
                                 Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
                                       builder: (_) => const LoginView()),
