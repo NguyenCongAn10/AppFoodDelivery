@@ -874,6 +874,38 @@ class BackendService {
     }
   }
 
+  Future<RestaurantModel> updateRestaurantProfile({
+    String? name,
+    String? address,
+    String? phone,
+    double? latitude,
+    double? longitude,
+  }) async {
+    try {
+      final Map<String, dynamic> data = {};
+      if (name != null) data['restaurant_name'] = name;
+      if (address != null) data['address'] = address;
+      if (phone != null) data['phone'] = phone;
+      if (latitude != null) data['latitude'] = latitude;
+      if (longitude != null) data['longitude'] = longitude;
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/restaurants/me'),
+        headers: await _getHeaders(),
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        return RestaurantModel.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to update restaurant profile: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      _logError('updateRestaurantProfile', e, stack);
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> createFood(Map<String, dynamic> data) async {
     try {
       final response = await http.post(

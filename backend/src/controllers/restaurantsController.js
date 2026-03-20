@@ -166,3 +166,32 @@ export const updateRestaurantStatus = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+// PATCH /api/restaurants/me
+export const updateMyRestaurant = async (req, res) => {
+    try {
+        const { restaurant_name, address, phone, latitude, longitude } = req.body;
+        const user_uid = req.user.uid;
+
+        const restaurant = await prisma.restaurants.findFirst({ where: { user_uid } });
+        if (!restaurant) {
+            return res.status(404).json({ error: 'Restaurant not found' });
+        }
+
+        const updated = await prisma.restaurants.update({
+            where: { id: restaurant.id },
+            data: {
+                restaurant_name: restaurant_name !== undefined ? restaurant_name : restaurant.restaurant_name,
+                address: address !== undefined ? address : restaurant.address,
+                phone: phone !== undefined ? phone : restaurant.phone,
+                latitude: latitude !== undefined ? latitude : restaurant.latitude,
+                longitude: longitude !== undefined ? longitude : restaurant.longitude,
+            },
+        });
+
+        res.json(updated);
+    } catch (err) {
+        console.error('Update restaurant profile error:', err);
+        res.status(500).json({ error: err.message });
+    }
+};
