@@ -23,7 +23,7 @@ class BackendService {
 
   BackendService._internal();
 
-  static const String baseUrl = 'http://192.168.116.26:3000/api';
+  static const String baseUrl = 'http://192.168.1.82:3000/api';
 
   final _authRepo = AuthRepository();
 

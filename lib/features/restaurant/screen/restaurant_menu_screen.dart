@@ -5,6 +5,7 @@ import 'package:delivery_apps/core/models/restaurant_model.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import '../widget/restaurant_add_item_bottom_sheet.dart';
 
 class RestaurantMenuScreen extends StatefulWidget {
   const RestaurantMenuScreen({super.key});
@@ -74,11 +75,16 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     }
   }
 
-  void _editItem(FoodModel food) {
-    // TODO: Implement Edit Dialog or Navigate to Edit Screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Edit ${food.name} - Coming soon')),
+  Future<void> _editItem(FoodModel food) async {
+    final result = await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => RestaurantAddItemBottomSheet(food: food),
     );
+    if (result == true) {
+      _fetchData();
+    }
   }
 
   @override
@@ -86,8 +92,9 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     final grouped = <String, List<FoodModel>>{};
     if (_restaurant != null && _restaurant!.foods != null) {
       for (final food in _restaurant!.foods!) {
-        // Use category name if available, otherwise default to 'Other'
-        final categoryName = food.optionGroups.isNotEmpty ? 'Featured' : 'Menu Items'; 
+        final categoryName = food.categoryName?.isNotEmpty == true
+            ? food.categoryName!
+            : 'Others';
         grouped.putIfAbsent(categoryName, () => []).add(food);
       }
     }
@@ -102,7 +109,16 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         elevation: 0,
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+        onPressed: () async {
+          final result = await showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => const RestaurantAddItemBottomSheet(),
+          );
+          if (result == true) {
+            _fetchData();
+          }
         },
         backgroundColor: AppColor.primary(context),
         icon: const Icon(Icons.add, color: Colors.white),
@@ -133,82 +149,192 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                             endActionPane: ActionPane(
                               motion: const ScrollMotion(),
                               children: [
-                                SlidableAction(
+                                CustomSlidableAction(
                                   onPressed: (_) => _editItem(food),
-                                  backgroundColor: Colors.blue,
-                                  foregroundColor: Colors.white,
-                                  icon: Icons.edit,
-                                  label: 'Edit',
-                                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+                                  backgroundColor: Colors.transparent,
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: const BoxDecoration(
+                                        color: Colors.blue,
+                                        shape: BoxShape.circle),
+                                    child: const Icon(Icons.edit,
+                                        color: Colors.white, size: 22),
+                                  ),
                                 ),
-                                SlidableAction(
+                                CustomSlidableAction(
                                   onPressed: (_) => _deleteItem(food),
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                  icon: Icons.delete,
-                                  label: 'Delete',
-                                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(16)),
+                                  backgroundColor: Colors.transparent,
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle),
+                                    child: const Icon(Icons.delete,
+                                        color: Colors.white, size: 22),
+                                  ),
                                 ),
                               ],
                             ),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                              decoration: BoxDecoration(
-                                color: AppColor.container(context),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 48,
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      color: AppColor.primary(context).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: food.imageUrl != null
-                                        ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(12),
-                                            child: Image.network(food.imageUrl!, fit: BoxFit.cover),
-                                          )
-                                        : Icon(Icons.fastfood_rounded, color: AppColor.primary(context), size: 24),
+                            child: Stack(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: AppColor.container(context),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.04),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2))
+                                    ],
                                   ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(food.name, style: AppTextStyle.bodyBold(context, fontSize: 14)),
-                                        const SizedBox(height: 3),
-                                        Text(
-                                          'Rs. ${food.price.toStringAsFixed(0)}',
-                                          style: AppTextStyle.body(context, fontSize: 13, color: AppColor.primary(context)),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Column(
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Switch(
-                                        value: food.isAvailable,
-                                        activeColor: AppColor.primary(context),
-                                        onChanged: (val) => _toggleAvailability(food, val),
-                                      ),
-                                      Text(
-                                        food.isAvailable ? 'Available' : 'Off',
-                                        style: AppTextStyle.body(
-                                          context,
-                                          fontSize: 11,
-                                          color: food.isAvailable ? Colors.green : AppColor.textSecondary(context),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(food.name,
+                                                style: AppTextStyle.bodyBold(
+                                                    context,
+                                                    fontSize: 16)),
+                                            if (food.description != null &&
+                                                food.description!
+                                                    .isNotEmpty) ...[
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                food.description!,
+                                                style: AppTextStyle.body(
+                                                    context,
+                                                    fontSize: 13,
+                                                    color:
+                                                        AppColor.textSecondary(
+                                                            context)),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              '\$ ${food.price.toStringAsFixed(0)}',
+                                              style: AppTextStyle.bodyBold(
+                                                  context,
+                                                  fontSize: 15,
+                                                  color: AppColor.textAccent(
+                                                      context)),
+                                            ),
+                                            if (food
+                                                .optionGroups.isNotEmpty) ...[
+                                              const SizedBox(height: 6),
+                                              Wrap(
+                                                spacing: 6,
+                                                runSpacing: 6,
+                                                children: food.optionGroups
+                                                    .map((group) {
+                                                  final optionsText = group
+                                                      .options
+                                                      .map((o) => o.name)
+                                                      .join(', ');
+                                                  return Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColor
+                                                          .secondaryBackground(
+                                                              context),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              6),
+                                                    ),
+                                                    child: Text(
+                                                      '${group.name}: $optionsText',
+                                                      style:
+                                                          AppTextStyle.bodyBold(
+                                                              context,
+                                                              fontSize: 11,
+                                                              color: AppColor
+                                                                  .textTitle(
+                                                                      context)),
+                                                    ),
+                                                  );
+                                                }).toList(),
+                                              ),
+                                            ],
+                                          ],
                                         ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Container(
+                                        width: 80,
+                                        height: 80,
+                                        decoration: BoxDecoration(
+                                          color: AppColor.primary(context)
+                                              .withValues(alpha: 0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                        child: food.imageUrl != null
+                                            ? ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                child: Image.network(
+                                                    food.imageUrl!,
+                                                    fit: BoxFit.cover),
+                                              )
+                                            : Icon(Icons.fastfood_rounded,
+                                                color:
+                                                    AppColor.primary(context),
+                                                size: 32),
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                // Round toggle button on top right of the card
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: GestureDetector(
+                                    onTap: () => _toggleAvailability(
+                                        food, !food.isAvailable),
+                                    child: Container(
+                                      width: 28,
+                                      height: 28,
+                                      decoration: BoxDecoration(
+                                        color: food.isAvailable
+                                            ? Colors.blue
+                                            : Colors.grey,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: Colors.white, width: 2),
+                                        boxShadow: [
+                                          BoxShadow(
+                                              color: Colors.black
+                                                  .withValues(alpha: 0.1),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2))
+                                        ],
+                                      ),
+                                      child: Icon(
+                                        food.isAvailable
+                                            ? Icons.check
+                                            : Icons.close,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),

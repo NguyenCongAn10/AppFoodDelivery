@@ -7,10 +7,12 @@ import 'package:delivery_apps/features/user/home/screen/startup_view.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:delivery_apps/core/services/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await SupabaseService.initialize();
   runApp(const MyApp());
 }
 

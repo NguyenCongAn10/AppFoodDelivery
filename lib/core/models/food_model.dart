@@ -1,6 +1,8 @@
 class FoodModel {
   final int id;
   final int restaurantId;
+  final int? categoryId;
+  final String? categoryName;
   final String name;
   final String? description;
   final double price;
@@ -14,6 +16,8 @@ class FoodModel {
   FoodModel({
     required this.id,
     required this.restaurantId,
+    this.categoryId,
+    this.categoryName,
     required this.name,
     this.description,
     required this.price,
@@ -29,6 +33,8 @@ class FoodModel {
     return FoodModel(
       id: json['id'] ?? 0,
       restaurantId: json['restaurant_id'] ?? 0,
+      categoryId: json['category_id'],
+      categoryName: json['categories']?['name'],
       name: json['name'] ?? '',
       description: json['description'],
       price: json['price'] is String
@@ -52,6 +58,8 @@ class FoodModel {
     return {
       'id': id,
       'restaurant_id': restaurantId,
+      'category_id': categoryId,
+      'category_name': categoryName,
       'name': name,
       'description': description,
       'price': price,
