@@ -42,6 +42,7 @@ export const searchRestaurantsByFood = async (req, res) => {
         const foods = await prisma.foods.findMany({
             where: {
                 is_available: true,
+                restaurants: { is_open: true },
                 OR: [
                     {
                         name: {
@@ -139,6 +140,7 @@ export const getSearchSuggestions = async (req, res) => {
         const foods = await prisma.foods.findMany({
             where: {
                 is_available: true,
+                restaurants: { is_open: true }
             },
             include: {
                 restaurants: true,

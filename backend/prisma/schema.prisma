@@ -135,6 +135,7 @@ model orders {
   shipper_id    Int?
   status        order_status? @default(PENDING)
   total_price   Decimal?      @default(0) @db.Decimal(10, 2)
+  delivery_fee  Decimal?      @default(0) @db.Decimal(10, 2)
   delivery_address String?
   payment_method   String?
   delivery_lat     Float?

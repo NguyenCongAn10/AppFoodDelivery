@@ -56,8 +56,7 @@ class _RestaurantHomeScreenState extends State<RestaurantHomeScreen> {
   List<OrderModel> get _currentOrders => _orders
       .where((o) =>
           o.status == OrderStatus.PENDING ||
-          o.status == OrderStatus.CONFIRMED ||
-          o.status == OrderStatus.DELIVERING)
+          o.status == OrderStatus.CONFIRMED)
       .toList();
 
   void _openOrderDetail(OrderModel order) {

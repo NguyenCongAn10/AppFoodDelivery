@@ -1,5 +1,16 @@
 import prisma from '../config/prisma.js';
 
+// Haversine formula: khoảng cách giữa 2 tọa độ (km)
+function haversineDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2
+        + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+        * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 // POST /orders (user)
 export const createOrder = async (req, res) => {
     try {
@@ -36,11 +47,21 @@ export const createOrder = async (req, res) => {
             });
         }
         
+        // Tính phí giao hàng (1$ cho mỗi KM, tối thiểu 1$)
+        let delivery_fee = 0;
+        const restaurant = await prisma.restaurants.findUnique({ where: { id: restaurant_id } });
+        if (restaurant && lat && lng) {
+            const distKm = haversineDistance(lat, lng, restaurant.latitude, restaurant.longitude);
+            delivery_fee = Math.max(1, Math.round(distKm * 10) / 10); // $1/km, round 1 decimal
+        }
+        total_price += delivery_fee;
+        
         const order = await prisma.orders.create({
             data: {
                 user_uid,
                 restaurant_id,
                 total_price,
+                delivery_fee,
                 delivery_address: address,
                 payment_method,
                 delivery_lat: lat,
@@ -71,6 +92,46 @@ export const getMyOrders = async (req, res) => {
             orderBy: { created_at: 'desc' },
         });
         res.json(orders);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// GET /orders/available?lat=&lng= (shipper) - lọc đơn trong bán kính 15km
+export const getAvailableOrders = async (req, res) => {
+    try {
+        const { lat, lng } = req.query;
+        if (!lat || !lng) {
+            return res.status(400).json({ error: 'Vị trí hiện tại (lat, lng) là bắt buộc' });
+        }
+
+        const shipperLat = parseFloat(lat);
+        const shipperLng = parseFloat(lng);
+        const MAX_DISTANCE_KM = 15;
+
+        const orders = await prisma.orders.findMany({
+            where: { status: 'CONFIRMED', shipper_id: null },
+            include: {
+                restaurants: true,
+                users: true,
+                order_items: { include: { foods: true } },
+            },
+            orderBy: { created_at: 'desc' },
+        });
+
+        const nearby = orders
+            .map(order => {
+                const dist = haversineDistance(
+                    shipperLat, shipperLng,
+                    order.restaurants.latitude,
+                    order.restaurants.longitude
+                );
+                return { ...order, distance_km: Math.round(dist * 10) / 10 };
+            })
+            .filter(order => order.distance_km <= MAX_DISTANCE_KM)
+            .sort((a, b) => a.distance_km - b.distance_km);
+
+        res.json(nearby);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -168,6 +229,37 @@ export const assignShipper = async (req, res) => {
     }
 };
 
+// PATCH /orders/:id/accept (shipper) - tự nhận đơn
+export const acceptOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const shipper = await prisma.shippers.findUnique({ where: { user_uid: req.user.uid } });
+        if (!shipper) {
+            return res.status(404).json({ error: 'Shipper profile not found' });
+        }
+
+        // Kiểm tra đơn vẫn còn khả dụng (tránh race condition)
+        const existing = await prisma.orders.findUnique({ where: { id: parseInt(id) } });
+        if (!existing) return res.status(404).json({ error: 'Order not found' });
+        if (existing.status !== 'CONFIRMED' || existing.shipper_id !== null) {
+            return res.status(409).json({ error: 'Đơn hàng này đã được nhận bởi shipper khác' });
+        }
+
+        const order = await prisma.orders.update({
+            where: { id: parseInt(id) },
+            data: { shipper_id: shipper.id }, // status KEEP as CONFIRMED until restaurant Hands over
+            include: {
+                restaurants: true,
+                users: true,
+                order_items: { include: { foods: true } },
+            },
+        });
+        res.json(order);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 // PATCH /orders/:id/pickup (shipper)
 export const pickupOrder = async (req, res) => {
     try {
@@ -199,6 +291,43 @@ export const completeOrder = async (req, res) => {
         const order = await prisma.orders.update({
             where: { id: parseInt(id) },
             data: { status: 'COMPLETED' },
+        });
+        res.json(order);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// PATCH /orders/:id/location (shipper) - cập nhật GPS
+export const updateShipperLocation = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { lat, lng } = req.body;
+        if (lat === undefined || lng === undefined) {
+            return res.status(400).json({ error: 'lat và lng là bắt buộc' });
+        }
+        const order = await prisma.orders.update({
+            where: { id: parseInt(id) },
+            data: { shipper_lat: parseFloat(lat), shipper_lng: parseFloat(lng) },
+        });
+        res.json(order);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// PATCH /orders/:id/ready (restaurant) - Chuẩn bị xong, giao cho shipper
+export const readyOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const restaurant = await prisma.restaurants.findFirst({ where: { user_uid: req.user.uid } });
+        if (!restaurant) {
+            return res.status(404).json({ error: "Restaurant profile not found" });
+        }
+        
+        const order = await prisma.orders.update({
+            where: { id: parseInt(id) },
+            data: { status: 'DELIVERING' },
         });
         res.json(order);
     } catch (err) {

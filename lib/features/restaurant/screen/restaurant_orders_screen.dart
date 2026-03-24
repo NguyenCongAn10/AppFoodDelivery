@@ -152,6 +152,7 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> with Si
             onMoreTap: () => _openOrderDetail(order),
             onAccept: () => _updateOrderStatus(order, 'confirm'),
             onReject: () => _updateOrderStatus(order, 'cancel'),
+            onReady: () => _updateOrderStatus(order, 'ready'),
           );
         },
       ),

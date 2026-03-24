@@ -128,9 +128,27 @@ class RestaurantOrderCard extends StatelessWidget {
           ] else if (isAccepted) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-              child: _buildActionButton(
+              child: order.shipperId == null 
+               ? Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'WAITING FOR SHIPPER',
+                      style: TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                )
+               : _buildActionButton(
                 onTap: onReady,
-                label: 'ORDER READY',
+                label: 'ORDER READY (HANDOVER)',
                 color: Colors.green,
                 expanded: true,
               ),

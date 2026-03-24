@@ -61,3 +61,37 @@ export const updateMyShipper = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+// GET /shippers/me/dashboard
+export const getShipperDashboard = async (req, res) => {
+    try {
+        const shipper = await prisma.shippers.findUnique({
+            where: { user_uid: req.user.uid },
+        });
+
+        if (!shipper) {
+            return res.status(404).json({ error: 'Shipper not found' });
+        }
+
+        const completedOrders = await prisma.orders.findMany({
+            where: { shipper_id: shipper.id, status: 'COMPLETED' },
+            orderBy: { created_at: 'desc' },
+            include: { restaurants: true, users: true }
+        });
+
+        // Sum delivery_fee
+        const totalEarnings = completedOrders.reduce((sum, order) => sum + Number(order.delivery_fee || 0), 0);
+        const totalDeliveries = completedOrders.length;
+        
+        // Lấy top 20 đơn giao gần nhất
+        const recentDeliveries = completedOrders.slice(0, 20);
+
+        res.json({
+            total_earnings: totalEarnings,
+            total_deliveries: totalDeliveries,
+            recent_deliveries: recentDeliveries
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};

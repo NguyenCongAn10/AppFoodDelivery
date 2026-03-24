@@ -4,7 +4,9 @@ import prisma from '../config/prisma.js';
 export const getFoods = async (req, res) => {
     try {
         const { category_id } = req.query;
-        let whereClause = {};
+        let whereClause = {
+            restaurants: { is_open: true }
+        };
 
         if (category_id) {
             whereClause.category_id = parseInt(category_id, 10);

@@ -2,8 +2,10 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/user_model.dart';
 import 'package:delivery_apps/features/shipper/screen/shipper_home_screen.dart';
-import 'package:delivery_apps/features/user/profile/screen/login_view.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:delivery_apps/features/shipper/screen/shipper_active_screen.dart';
+import 'package:delivery_apps/features/shipper/screen/shipper_history_screen.dart';
+import 'package:delivery_apps/features/shipper/screen/shipper_dashboard_screen.dart';
+import 'package:delivery_apps/features/shipper/screen/shipper_profile_screen.dart';
 import 'package:flutter/material.dart';
 
 class ShipperMainScreen extends StatefulWidget {
@@ -24,10 +26,17 @@ class _ShipperMainScreenState extends State<ShipperMainScreen> {
   void initState() {
     super.initState();
     _pages = [
-      const ShipperHomeScreen(),
-      const _ShipperActiveScreen(),
-      const _ShipperHistoryScreen(),
-      _ShipperProfileScreen(user: widget.user),
+      ShipperHomeScreen(
+        onAcceptOrder: () {
+           // Chuyển sang tab Đang giao khi nhận đơn thành công
+           setState(() => _currentIndex = 1);
+           _bottomNavKey.currentState?.setPage(1);
+        },
+      ),
+      const ShipperActiveScreen(),
+      const ShipperHistoryScreen(),
+      const ShipperDashboardScreen(),
+      ShipperProfileScreen(user: widget.user),
     ];
   }
 
@@ -49,7 +58,8 @@ class _ShipperMainScreenState extends State<ShipperMainScreen> {
             _buildNavItem(Icons.home_outlined, 0),
             _buildNavItem(Icons.delivery_dining_outlined, 1),
             _buildNavItem(Icons.history_outlined, 2),
-            _buildNavItem(Icons.person_outline, 3),
+            _buildNavItem(Icons.bar_chart_outlined, 3),
+            _buildNavItem(Icons.person_outline, 4),
           ],
           backgroundColor: AppColor.inputFill(context),
           color: AppColor.container(context),
@@ -79,109 +89,3 @@ class _ShipperMainScreenState extends State<ShipperMainScreen> {
   }
 }
 
-// Scaffold screens for future implementation
-class _ShipperActiveScreen extends StatelessWidget {
-  const _ShipperActiveScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return const _ShipperPlaceholderScreen(
-      icon: Icons.delivery_dining,
-      title: 'Active Delivery',
-      message: 'No active delivery right now.',
-    );
-  }
-}
-
-class _ShipperHistoryScreen extends StatelessWidget {
-  const _ShipperHistoryScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return const _ShipperPlaceholderScreen(
-      icon: Icons.history,
-      title: 'Delivery History',
-      message: 'Your completed deliveries will appear here.',
-    );
-  }
-}
-
-class _ShipperProfileScreen extends StatelessWidget {
-  final UserModel user;
-  const _ShipperProfileScreen({required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColor.inputFill(context),
-      appBar: AppBar(
-        backgroundColor: AppColor.container(context),
-        title: const Text('Profile'),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout, color: AppColor.primary(context)),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginView()),
-                  (route) => false,
-                );
-              }
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: AppColor.primary(context).withOpacity(0.1),
-              child: Icon(Icons.delivery_dining, size: 50, color: AppColor.primary(context)),
-            ),
-            const SizedBox(height: 16),
-            Text(user.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            Text(user.email, style: TextStyle(color: Colors.grey.shade500)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ShipperPlaceholderScreen extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String message;
-  const _ShipperPlaceholderScreen({required this.icon, required this.title, required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColor.inputFill(context),
-      appBar: AppBar(
-        backgroundColor: AppColor.container(context),
-        title: Text(title),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 70, color: AppColor.textSecondary(context).withOpacity(0.3)),
-            const SizedBox(height: 16),
-            Text(message, style: TextStyle(color: AppColor.textSecondary(context))),
-          ],
-        ),
-      ),
-    );
-  }
-}

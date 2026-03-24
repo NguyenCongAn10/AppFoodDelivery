@@ -28,6 +28,7 @@ class OrderModel {
   final double? deliveryLng;
   final double? shipperLat;
   final double? shipperLng;
+  final double? deliveryFee;
   final List<OrderItemModel> items;
 
   OrderModel({
@@ -47,6 +48,7 @@ class OrderModel {
     this.deliveryLng,
     this.shipperLat,
     this.shipperLng,
+    this.deliveryFee,
     this.items = const [],
   });
 
@@ -60,6 +62,9 @@ class OrderModel {
       totalPrice: json['total_price'] is String 
           ? double.tryParse(json['total_price']) ?? 0.0 
           : (json['total_price'] as num?)?.toDouble() ?? 0.0,
+      deliveryFee: json['delivery_fee'] is String 
+          ? double.tryParse(json['delivery_fee']) ?? 0.0 
+          : (json['delivery_fee'] as num?)?.toDouble() ?? 0.0,
       deliveryAddress: json['delivery_address'],
       paymentMethod: json['payment_method'],
       deliveryLat: (json['delivery_lat'] as num?)?.toDouble(),

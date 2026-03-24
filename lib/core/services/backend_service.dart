@@ -269,6 +269,67 @@ class BackendService {
     }
   }
 
+  Future<List<OrderModel>> getAvailableOrders(double lat, double lng) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/orders/available?lat=$lat&lng=$lng'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        return list
+            .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to get available orders: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      _logError('getAvailableOrders', e, stack);
+      rethrow;
+    }
+  }
+
+  Future<OrderModel> acceptOrder(int orderId) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/orders/$orderId/accept'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return OrderModel.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to accept order: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e, stack) {
+      _logError('acceptOrder', e, stack);
+      rethrow;
+    }
+  }
+
+  Future<OrderModel> updateShipperLocation(int orderId, double lat, double lng) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/orders/$orderId/location'),
+        headers: await _getHeaders(),
+        body: jsonEncode({
+          'lat': lat,
+          'lng': lng,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return OrderModel.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to update location: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e, stack) {
+      _logError('updateShipperLocation', e, stack);
+      rethrow;
+    }
+  }
+
   Future<List<OrderModel>> getAllOrders() async {
     try {
       final response = await http.get(
@@ -956,6 +1017,23 @@ class BackendService {
       }
     } catch (e, stack) {
       _logError('deleteFood', e, stack);
+      rethrow;
+    }
+  }
+  Future<Map<String, dynamic>> getShipperDashboard() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/shippers/me/dashboard'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get dashboard data: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      _logError('getShipperDashboard', e, stack);
       rethrow;
     }
   }
