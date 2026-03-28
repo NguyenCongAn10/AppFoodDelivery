@@ -1,11 +1,13 @@
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
+import 'package:delivery_apps/core/providers/order_realtime_provider.dart';
 import 'package:delivery_apps/features/restaurant/widget/order_action_bottom_sheet.dart';
 import 'package:delivery_apps/features/restaurant/widget/restaurant_order_card.dart';
 import 'package:flutter/material.dart';
 
 import 'package:delivery_apps/core/models/order_model.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
+import 'package:provider/provider.dart';
 
 class RestaurantOrdersScreen extends StatefulWidget {
   const RestaurantOrdersScreen({super.key});
@@ -20,24 +22,32 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> with Si
 
   List<OrderModel> _allOrders = [];
   bool _isLoading = true;
+  Map<String, dynamic>? _lastPayload;
+  late OrderRealtimeProvider _realtimeProvider;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _fetchOrders();
+    // Save reference for safe dispose
+    _realtimeProvider = context.read<OrderRealtimeProvider>();
+    _realtimeProvider.subscribe();
   }
 
-  Future<void> _fetchOrders() async {
-    setState(() => _isLoading = true);
+  Future<void> _fetchOrders({bool showLoading = true}) async {
+    if (!mounted) return;
+    if (showLoading) setState(() => _isLoading = true);
     try {
       final orders = await _backendService.getRestaurantOrders();
+      if (!mounted) return;
       setState(() {
         _allOrders = orders;
         _isLoading = false;
       });
     } catch (e) {
       debugPrint('Error fetching orders: $e');
+      if (!mounted) return;
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -65,6 +75,7 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> with Si
 
   @override
   void dispose() {
+    _realtimeProvider.unsubscribe();
     _tabController.dispose();
     super.dispose();
   }
@@ -87,6 +98,18 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> with Si
 
   @override
   Widget build(BuildContext context) {
+    // Auto-refresh when any order event arrives
+    final payload =
+        context.select<OrderRealtimeProvider, Map<String, dynamic>?>(
+      (p) => p.latestPayload,
+    );
+    if (payload != null && payload != _lastPayload) {
+      _lastPayload = payload;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _fetchOrders(showLoading: false);
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppColor.inputFill(context),
       appBar: AppBar(

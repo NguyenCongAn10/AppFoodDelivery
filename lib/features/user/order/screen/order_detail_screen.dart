@@ -1,9 +1,11 @@
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
+import 'package:delivery_apps/core/providers/order_realtime_provider.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/features/user/order/widget/order_tracking_map.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:math' as math;
 
 class OrderDetailScreen extends StatefulWidget {
@@ -15,9 +17,22 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
+  late OrderModel _order;
+  late OrderRealtimeProvider _realtimeProvider;
+
   @override
   void initState() {
     super.initState();
+    _order = widget.order;
+    // Save reference for safe dispose
+    _realtimeProvider = context.read<OrderRealtimeProvider>();
+    _realtimeProvider.subscribe();
+  }
+
+  @override
+  void dispose() {
+    _realtimeProvider.unsubscribe();
+    super.dispose();
   }
 
   Color _statusColor(OrderStatus status) {
@@ -52,7 +67,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final order = widget.order;
+    // Update local order when a realtime payload matches this order's ID
+    final payload = context.select<OrderRealtimeProvider, Map<String, dynamic>?>(
+      (p) => p.latestPayload,
+    );
+    if (payload != null && payload['id'] == _order.id) {
+      try {
+        _order = OrderModel.fromJson(payload);
+      } catch (_) {}
+    }
+
+    final order = _order;
     final restaurant = order.restaurant;
 
     final resLat = restaurant?.latitude ?? 21.0285;

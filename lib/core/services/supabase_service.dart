@@ -27,8 +27,56 @@ class SupabaseService {
       final String publicUrl = client.storage.from(_bucketName).getPublicUrl(path);
       return publicUrl;
     } catch (e) {
-      debugPrint('Error uploading image to Supabase: $e');
+      if (kDebugMode) {
+        debugPrint('Error uploading image to Supabase: $e');
+      }
       return null;
     }
+  }
+
+
+
+  static RealtimeChannel? _ordersChannel;
+
+  static RealtimeChannel subscribeOrders({
+    required void Function(Map<String, dynamic> payload) onPayload,
+    String channelName = 'public',
+  }) {
+    _ordersChannel?.unsubscribe();
+
+    _ordersChannel = client
+        .channel(channelName)
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'orders',
+          callback: (PostgresChangePayload payload) {
+            if (payload.errors != null) {
+              if (kDebugMode) {
+                debugPrint('--- [ERROR] SUPABASE REALTIME BLOCKED ---');
+                debugPrint('Error from Supabase: ${payload.errors}');
+                debugPrint('---------------------------------------');
+              }
+            }
+
+            onPayload({
+              'eventType': payload.eventType.name,
+              'new': payload.newRecord,
+              'old': payload.oldRecord,
+            });
+          },
+        )
+        .subscribe((status, [error]) {
+      if (kDebugMode) {
+        debugPrint('[Supabase] orders channel: $status ${error ?? ''}');
+      }
+    });
+
+    return _ordersChannel!;
+  }
+
+  static Future<void> unsubscribeOrders() async {
+    await _ordersChannel?.unsubscribe();
+    _ordersChannel = null;
   }
 }

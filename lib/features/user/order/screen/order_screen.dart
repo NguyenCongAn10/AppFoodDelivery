@@ -1,11 +1,13 @@
 
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
+import 'package:delivery_apps/core/providers/order_realtime_provider.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/features/user/order/screen/order_detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class OrderScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -20,26 +22,42 @@ class _OrderScreenState extends State<OrderScreen> {
   List<OrderModel> _orders = [];
   bool _isLoading = true;
   String? _errorMessage;
+  Map<String, dynamic>? _lastPayload;
+  late OrderRealtimeProvider _realtimeProvider;
 
   @override
   void initState() {
     super.initState();
     _loadOrders();
+    // Save reference for safe dispose
+    _realtimeProvider = context.read<OrderRealtimeProvider>();
+    _realtimeProvider.subscribe();
   }
 
-  Future<void> _loadOrders() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+  @override
+  void dispose() {
+    _realtimeProvider.unsubscribe();
+    super.dispose();
+  }
+
+  Future<void> _loadOrders({bool showLoading = true}) async {
+    if (!mounted) return;
+    if (showLoading) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     try {
       final orders = await _backendService.getMyOrders();
+      if (!mounted) return;
       setState(() {
         _orders = orders;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Failed to load orders: $e';
         _isLoading = false;
@@ -79,6 +97,17 @@ class _OrderScreenState extends State<OrderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Refresh when a new realtime event arrives
+    final payload = context.select<OrderRealtimeProvider, Map<String, dynamic>?>(
+      (p) => p.latestPayload,
+    );
+    if (payload != null && payload != _lastPayload) {
+      _lastPayload = payload;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadOrders(showLoading: false);
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppColor.inputFill(context),
       body: Padding(

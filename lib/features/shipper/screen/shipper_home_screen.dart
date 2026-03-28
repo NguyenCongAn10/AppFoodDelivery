@@ -1,10 +1,12 @@
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
+import 'package:delivery_apps/core/providers/order_realtime_provider.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class ShipperHomeScreen extends StatefulWidget {
   final VoidCallback? onAcceptOrder;
@@ -19,18 +21,32 @@ class _ShipperHomeScreenState extends State<ShipperHomeScreen> {
   String? _error;
   List<OrderModel> _orders = [];
   Position? _currentPosition;
+  Map<String, dynamic>? _lastPayload;
+  late OrderRealtimeProvider _realtimeProvider;
 
   @override
   void initState() {
     super.initState();
     _fetchOrders();
+    // Save reference for safe dispose
+    _realtimeProvider = context.read<OrderRealtimeProvider>();
+    _realtimeProvider.subscribe();
   }
 
-  Future<void> _fetchOrders() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+  @override
+  void dispose() {
+    _realtimeProvider.unsubscribe();
+    super.dispose();
+  }
+
+  Future<void> _fetchOrders({bool showLoading = true}) async {
+    if (!mounted) return;
+    if (showLoading) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
 
     try {
       // Kiểm tra và xin quyền location
@@ -118,6 +134,17 @@ class _ShipperHomeScreenState extends State<ShipperHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Auto-refresh when new order is available (realtime INSERT)
+    final payload = context.select<OrderRealtimeProvider, Map<String, dynamic>?>(
+      (p) => p.latestPayload,
+    );
+    if (payload != null && payload != _lastPayload) {
+      _lastPayload = payload;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _fetchOrders(showLoading: false);
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppColor.inputFill(context),
       appBar: AppBar(
