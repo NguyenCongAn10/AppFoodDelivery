@@ -1,6 +1,56 @@
 import prisma from '../config/prisma.js';
 import { sendOtpEmail } from '../config/mailer.js';
 
+// ── In-memory store cho pre-registration OTP ─────────────────────────────────
+// Map<email, { otp: string, expiry: Date }>
+const preRegisterOtpStore = new Map();
+
+// POST /auth/send-pre-register-otp  (không cần user tồn tại trước)
+export const sendPreRegisterOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 phút
+
+        preRegisterOtpStore.set(email, { otp, expiry });
+
+        // Tự dọn sau 5 phút
+        setTimeout(() => preRegisterOtpStore.delete(email), 5 * 60 * 1000);
+
+        await sendOtpEmail(email, otp);
+        res.json({ message: 'OTP sent successfully' });
+    } catch (err) {
+        console.error('sendPreRegisterOtp error:', err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// POST /auth/verify-pre-register-otp
+export const verifyPreRegisterOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
+
+        const record = preRegisterOtpStore.get(email);
+        if (!record) return res.status(400).json({ error: 'OTP not found or expired' });
+
+        if (record.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+        if (new Date() > record.expiry) {
+            preRegisterOtpStore.delete(email);
+            return res.status(400).json({ error: 'OTP expired' });
+        }
+
+        preRegisterOtpStore.delete(email); // Xóa sau khi verify thành công
+        res.json({ message: 'OTP verified successfully' });
+    } catch (err) {
+        console.error('verifyPreRegisterOtp error:', err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+
 // POST /auth/login
 export const login = async (req, res) => {
     try {

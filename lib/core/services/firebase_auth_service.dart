@@ -4,6 +4,71 @@ import 'package:google_sign_in/google_sign_in.dart';
 class FirebaseAuthService {
   FirebaseAuth get _auth => FirebaseAuth.instance;
 
+  // ── Phone Auth ──────────────────────────────────────────────────────────────
+
+  /// Format số điện thoại sang E.164 (+84...)
+  String formatPhoneNumber(String phone) {
+    final cleaned = phone.replaceAll(RegExp(r'\s|-'), '');
+    if (cleaned.startsWith('+')) return cleaned;
+    if (cleaned.startsWith('0')) return '+84${cleaned.substring(1)}';
+    return '+84$cleaned';
+  }
+
+  /// Gửi SMS OTP qua Firebase Phone Auth
+  Future<void> sendPhoneOtp({
+    required String phoneNumber,
+    required void Function(String verificationId) onCodeSent,
+    required void Function(String error) onError,
+    required void Function(PhoneAuthCredential credential) onAutoVerified,
+  }) async {
+    await _auth.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      timeout: const Duration(seconds: 60),
+      verificationCompleted: (PhoneAuthCredential credential) {
+        onAutoVerified(credential);
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        onError(e.message ?? 'Phone verification failed');
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        onCodeSent(verificationId);
+      },
+      codeAutoRetrievalTimeout: (_) {},
+    );
+  }
+
+  /// Verify mã SMS — link vào user hiện tại hoặc sign in mới
+  Future<void> verifyPhoneOtp({
+    required String verificationId,
+    required String smsCode,
+    PhoneAuthCredential? credential,
+  }) async {
+    final phoneCredential = credential ??
+        PhoneAuthProvider.credential(
+          verificationId: verificationId,
+          smsCode: smsCode,
+        );
+
+    final user = _auth.currentUser;
+    if (user != null) {
+      try {
+        await user.linkWithCredential(phoneCredential);
+      } on FirebaseAuthException catch (e) {
+        // Nếu phone đã được link → sign in trực tiếp
+        if (e.code == 'provider-already-linked' ||
+            e.code == 'credential-already-in-use') {
+          await _auth.signInWithCredential(phoneCredential);
+        } else {
+          throw Exception('Phone verification failed: ${e.message}');
+        }
+      }
+    } else {
+      await _auth.signInWithCredential(phoneCredential);
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+
   Future<User?> createUser(
     String email,
     String password,

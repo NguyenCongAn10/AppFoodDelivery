@@ -1,33 +1,45 @@
 import 'dart:async';
+
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/router/app_router.dart';
-import 'package:delivery_apps/core/services/backend_service.dart';
+import 'package:delivery_apps/core/services/firebase_auth_service.dart';
 import 'package:delivery_apps/core/widgets/round_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class OTPVerificationView extends StatefulWidget {
-  final String email;
+class PhoneOtpView extends StatefulWidget {
+  final String phoneNumber;
+  final String verificationId;
   final Future<void> Function()? onVerified;
-  const OTPVerificationView({super.key, required this.email, this.onVerified});
+
+  const PhoneOtpView({
+    super.key,
+    required this.phoneNumber,
+    required this.verificationId,
+    this.onVerified,
+  });
 
   @override
-  State<OTPVerificationView> createState() => _OTPVerificationViewState();
+  State<PhoneOtpView> createState() => _PhoneOtpViewState();
 }
 
-class _OTPVerificationViewState extends State<OTPVerificationView> {
+class _PhoneOtpViewState extends State<PhoneOtpView> {
   final List<TextEditingController> _controllers =
-      List.generate(6, (index) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
-  
+      List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  final _firebaseService = FirebaseAuthService();
+
   bool _isLoading = false;
   String _errorMessage = '';
   int _resendTimer = 60;
   Timer? _timer;
+  late String _currentVerificationId;
 
   @override
   void initState() {
     super.initState();
+    _currentVerificationId = widget.verificationId;
     _startTimer();
   }
 
@@ -35,6 +47,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
     _resendTimer = 60;
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
       setState(() {
         if (_resendTimer > 0) {
           _resendTimer--;
@@ -70,20 +83,23 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
     });
 
     try {
+      await _firebaseService.verifyPhoneOtp(
+        verificationId: _currentVerificationId,
+        smsCode: otp,
+      );
       if (widget.onVerified != null) {
-        await BackendService().verifyPreRegisterOtp(widget.email, otp);
         await widget.onVerified!();
-      } else {
-        await BackendService().verifyOtp(widget.email, otp);
       }
       if (mounted) {
         await AppRouter.routeAfterLogin(context);
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
     }
   }
 
@@ -95,25 +111,47 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
       _errorMessage = '';
     });
 
-    try {
-      if (widget.onVerified != null) {
-        await BackendService().sendPreRegisterOtp(widget.email);
-      } else {
-        await BackendService().sendOtp(widget.email);
-      }
-      _startTimer();
-      setState(() => _isLoading = false);
-      if (mounted) {
+    await _firebaseService.sendPhoneOtp(
+      phoneNumber: widget.phoneNumber,
+      onCodeSent: (verificationId) {
+        if (!mounted) return;
+        setState(() {
+          _currentVerificationId = verificationId;
+          _isLoading = false;
+        });
+        _startTimer();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('OTP Resent Successfully')),
         );
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Failed to resend OTP';
-      });
-    }
+      },
+      onError: (error) {
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+          _errorMessage = error;
+        });
+      },
+      onAutoVerified: (PhoneAuthCredential credential) async {
+        try {
+          await _firebaseService.verifyPhoneOtp(
+            verificationId: _currentVerificationId,
+            smsCode: '',
+            credential: credential,
+          );
+          if (widget.onVerified != null) {
+            await widget.onVerified!();
+          }
+          if (mounted) await AppRouter.routeAfterLogin(context);
+        } catch (e) {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+              _errorMessage = e.toString().replaceFirst('Exception: ', '');
+            });
+          }
+        }
+      },
+    );
   }
 
   @override
@@ -124,7 +162,8 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: AppColor.textTitle(context)),
+          icon: Icon(Icons.arrow_back_ios_new,
+              color: AppColor.textTitle(context)),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -134,13 +173,24 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 20),
-            Text(
-              'OTP Verification',
-              style: AppTextStyle.title(context),
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColor.primary(context).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.sms_outlined,
+                size: 40,
+                color: AppColor.primary(context),
+              ),
             ),
+            const SizedBox(height: 24),
+            Text('SMS Verification', style: AppTextStyle.title(context)),
             const SizedBox(height: 10),
             Text(
-              'We have sent an OTP to \n${widget.email}',
+              'We sent a 6-digit code to\n${widget.phoneNumber}',
               textAlign: TextAlign.center,
               style: AppTextStyle.body(context),
             ),
@@ -161,11 +211,12 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                     decoration: InputDecoration(
                       counterText: '',
                       enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(),
+                        borderSide: const BorderSide(),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: AppColor.primary(context)),
+                        borderSide:
+                            BorderSide(color: AppColor.primary(context)),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -188,12 +239,17 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
               Text(
                 _errorMessage,
                 style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
               ),
             const SizedBox(height: 30),
             _isLoading
                 ? CircularProgressIndicator(color: AppColor.primary(context))
                 : RoundButton(
-                    txt: Text('Verify', style: AppTextStyle.bodyBold(context, color: Colors.white)),
+                    txt: Text(
+                      'Verify',
+                      style:
+                          AppTextStyle.bodyBold(context, color: Colors.white),
+                    ),
                     color: AppColor.primary(context),
                     onpress: _verifyOtp,
                   ),
@@ -201,13 +257,18 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Didn't receive code? ", style: AppTextStyle.body(context)),
+                Text("Didn't receive code? ",
+                    style: AppTextStyle.body(context)),
                 TextButton(
                   onPressed: _resendTimer == 0 ? _resendOtp : null,
                   child: Text(
-                    _resendTimer == 0 ? 'Resend' : 'Resend in ${_resendTimer}s',
+                    _resendTimer == 0
+                        ? 'Resend'
+                        : 'Resend in ${_resendTimer}s',
                     style: TextStyle(
-                      color: _resendTimer == 0 ? AppColor.primary(context) : Colors.grey,
+                      color: _resendTimer == 0
+                          ? AppColor.primary(context)
+                          : Colors.grey,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

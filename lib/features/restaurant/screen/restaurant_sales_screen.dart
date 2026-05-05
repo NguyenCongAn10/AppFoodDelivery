@@ -297,13 +297,13 @@ class _RestaurantSalesScreenState extends State<RestaurantSalesScreen> {
         AnimatedContainer(
           duration: const Duration(milliseconds: 800),
           width: 28,
-          height: 110 * ratio,
+          height: 100 * ratio,
           decoration: BoxDecoration(
             color: AppColor.primary(context),
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Text(day, style: AppTextStyle.body(context, fontSize: 11, color: AppColor.textSecondary(context))),
       ],
     );

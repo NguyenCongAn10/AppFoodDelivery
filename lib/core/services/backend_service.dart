@@ -23,7 +23,7 @@ class BackendService {
 
   BackendService._internal();
 
-  static const String baseUrl = 'http://192.168.1.82:3000/api';
+  static const String baseUrl = 'http://192.168.0.102:3000/api';
 
   final _authRepo = AuthRepository();
 
@@ -844,6 +844,41 @@ class BackendService {
       }
     } catch (e, stack) {
       _logError('verifyOtp', e, stack);
+      rethrow;
+    }
+  }
+
+  Future<void> sendPreRegisterOtp(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/send-pre-register-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to send OTP: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      _logError('sendPreRegisterOtp', e, stack);
+      rethrow;
+    }
+  }
+
+  Future<void> verifyPreRegisterOtp(String email, String otp) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/verify-pre-register-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'otp': otp}),
+      );
+
+      if (response.statusCode != 200) {
+        final error = jsonDecode(response.body)['error'] ?? 'Invalid OTP';
+        throw Exception(error);
+      }
+    } catch (e, stack) {
+      _logError('verifyPreRegisterOtp', e, stack);
       rethrow;
     }
   }
