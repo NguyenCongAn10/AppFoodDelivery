@@ -170,7 +170,7 @@ export const updateRestaurantStatus = async (req, res) => {
 // PATCH /api/restaurants/me
 export const updateMyRestaurant = async (req, res) => {
     try {
-        const { restaurant_name, address, phone, latitude, longitude } = req.body;
+        const { restaurant_name, address, phone, latitude, longitude, image_url } = req.body;
         const user_uid = req.user.uid;
 
         const restaurant = await prisma.restaurants.findFirst({ where: { user_uid } });
@@ -186,6 +186,7 @@ export const updateMyRestaurant = async (req, res) => {
                 phone: phone !== undefined ? phone : restaurant.phone,
                 latitude: latitude !== undefined ? latitude : restaurant.latitude,
                 longitude: longitude !== undefined ? longitude : restaurant.longitude,
+                ...(image_url !== undefined && { image_url }),
             },
         });
 

@@ -15,6 +15,7 @@ model users {
   email      String    @unique
   role       user_role @default(USER)
   phone      String?
+  avatar_url String?
   otp_code   String?
   otp_expiry DateTime?
   created_at DateTime? @default(now())
