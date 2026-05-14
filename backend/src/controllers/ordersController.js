@@ -107,7 +107,7 @@ export const getAvailableOrders = async (req, res) => {
 
         const shipperLat = parseFloat(lat);
         const shipperLng = parseFloat(lng);
-        const MAX_DISTANCE_KM = 15;
+        const MAX_DISTANCE_KM = 50;
 
         const orders = await prisma.orders.findMany({
             where: { status: 'CONFIRMED', shipper_id: null },
@@ -121,12 +121,15 @@ export const getAvailableOrders = async (req, res) => {
 
         const nearby = orders
             .map(order => {
-                const dist = haversineDistance(
-                    shipperLat, shipperLng,
-                    order.restaurants.latitude,
-                    order.restaurants.longitude
-                );
-                return { ...order, distance_km: Math.round(dist * 10) / 10 };
+                const rLat = order.restaurants?.latitude;
+                const rLng = order.restaurants?.longitude;
+                // If restaurant has no coordinates, include it at distance 0
+                if (rLat == null || rLng == null) {
+                    return { ...order, distance_km: 0 };
+                }
+                const dist = haversineDistance(shipperLat, shipperLng, rLat, rLng);
+                const distKm = isNaN(dist) ? 0 : Math.round(dist * 10) / 10;
+                return { ...order, distance_km: distKm };
             })
             .filter(order => order.distance_km <= MAX_DISTANCE_KM)
             .sort((a, b) => a.distance_km - b.distance_km);

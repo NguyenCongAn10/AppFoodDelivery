@@ -93,7 +93,7 @@ class _ProductHomeState extends State<ProductHome> {
                       height: 200,
                       child: Center(
                         child: Text(
-                          "Không có sản phẩm nào",
+                          "No products available",
                           style: AppTextStyle.body(context, color: Colors.red),
                         ),
                       ),
@@ -279,7 +279,7 @@ class _ProductHomeState extends State<ProductHome> {
                                                         .showSnackBar(
                                                       const SnackBar(
                                                           content: Text(
-                                                              "Đã thêm vào giỏ hàng")),
+                                                              "Added to cart")),
                                                     );
                                                   }
                                                 } catch (e) {
@@ -289,7 +289,7 @@ class _ProductHomeState extends State<ProductHome> {
                                                         .showSnackBar(
                                                       SnackBar(
                                                           content:
-                                                              Text("Lỗi: $e"),
+                                                              Text("Error: $e"),
                                                           backgroundColor:
                                                               Colors.red),
                                                     );

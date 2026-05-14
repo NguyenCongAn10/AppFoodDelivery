@@ -295,7 +295,7 @@ class _SearchScreenState extends State<SearchScreen> {
             AnimatedSize(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
-              alignment: Alignment.topCenter,
+              alignment: Alignment.topRight,
               child: Column(
                 children: [
                   Wrap(

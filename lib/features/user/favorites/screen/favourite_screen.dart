@@ -68,7 +68,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                         : favoriteProducts.isEmpty
                             ? Center(
                                 child: Text(
-                                  "Không có sản phẩm yêu thích",
+                                  "No favorite items",
                                   style: AppTextStyle.body(context,
                                       color: Colors.red),
                                 ),
@@ -225,7 +225,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                                                                     .showSnackBar(
                                                                   const SnackBar(
                                                                       content: Text(
-                                                                          'Đã thêm vào giỏ hàng!'),
+                                                                          'Added to cart!'),
                                                                       backgroundColor:
                                                                           Colors
                                                                               .green),
@@ -238,7 +238,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                                                                     .showSnackBar(
                                                                   SnackBar(
                                                                       content: Text(
-                                                                          'Lỗi: $e'),
+                                                                          'Error: $e'),
                                                                       backgroundColor:
                                                                           Colors
                                                                               .red),

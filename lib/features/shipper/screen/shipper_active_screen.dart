@@ -310,7 +310,7 @@ class _ActiveDeliveryCard extends StatelessWidget {
               Text('Collect: ', style: AppTextStyle.body(context, fontSize: 13, color: AppColor.textSecondary(context))),
               Text(
                 order.paymentMethod?.toLowerCase() == 'cash' 
-                  ? '${order.totalPrice.toStringAsFixed(0)}đ' 
+                  ? '${order.totalPrice.toStringAsFixed(0)} VND'
                   : 'Paid', 
                 style: AppTextStyle.bodyBold(context, fontSize: 16, color: order.paymentMethod?.toLowerCase() == 'cash' ? Colors.red : Colors.green)
               ),

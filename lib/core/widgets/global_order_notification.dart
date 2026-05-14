@@ -84,34 +84,34 @@ class _GlobalOrderNotificationState extends State<GlobalOrderNotification> {
     if (navContext == null) return;
 
     final role = _currentUser!.role;
-    
-    String title = 'Order #${order.id} Updated';
-    String message = 'Status: ${order.status?.name ?? 'UNKNOWN'}';
+
+    // Determine whether this event is relevant for the current role
+    final isRelevant = (role == UserRole.USER) ||
+        (role == UserRole.SHIPPER && order.status == OrderStatus.CONFIRMED) ||
+        (role == UserRole.RESTAURANT && order.status == OrderStatus.PENDING);
+    if (!isRelevant) return;
+
+    final String title;
+    final String message = 'Order #${order.id} • \$${order.totalPrice}';
     Widget? mainButton;
-    Widget icon = Icon(Icons.info_outline, color: Theme.of(navContext).colorScheme.primary);
+    Widget icon;
     OnTap? onTap;
 
     Flushbar? flushbar;
 
     if (role == UserRole.USER) {
+      title = 'Order #${order.id} Updated';
       icon = Icon(Icons.shopping_bag, color: Theme.of(navContext).colorScheme.primary);
       onTap = (bar) {
         bar.dismiss();
         Navigator.push(
           navContext,
-          MaterialPageRoute(
-            builder: (_) => OrderDetailScreen(order: order),
-          ),
+          MaterialPageRoute(builder: (_) => OrderDetailScreen(order: order)),
         );
       };
-    } else if (role == UserRole.SHIPPER || role == UserRole.RESTAURANT) {
-      title = role == UserRole.SHIPPER ? 'New Delivery Request!' : 'New Order Received!';
-      message = 'Order #${order.id} • \$${order.totalPrice}';
-      icon = Icon(
-        role == UserRole.SHIPPER ? Icons.delivery_dining : Icons.restaurant, 
-        color: Theme.of(navContext).colorScheme.secondary,
-      );
-      
+    } else if (role == UserRole.SHIPPER) {
+      title = 'New Delivery Request!';
+      icon = Icon(Icons.delivery_dining, color: Theme.of(navContext).colorScheme.secondary);
       mainButton = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -123,15 +123,33 @@ class _GlobalOrderNotificationState extends State<GlobalOrderNotification> {
             onPressed: () async {
               flushbar?.dismiss();
               try {
-                if (role == UserRole.SHIPPER) {
-                  await BackendService().acceptOrder(order.id);
-                } else {
-                  await BackendService().updateOrderStatus(order.id, 'confirm');
-                }
+                await BackendService().acceptOrder(order.id);
               } catch (e) {
-                if (kDebugMode) {
-                  debugPrint('Action Failed: $e');
-                }
+                if (kDebugMode) debugPrint('Accept order failed: $e');
+              }
+            },
+            child: Text('Accept', style: TextStyle(color: Theme.of(navContext).colorScheme.primary, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      );
+    } else {
+      // RESTAURANT — PENDING order
+      title = 'New Order Received!';
+      icon = Icon(Icons.restaurant, color: Theme.of(navContext).colorScheme.secondary);
+      mainButton = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton(
+            onPressed: () => flushbar?.dismiss(),
+            child: Text('Ignore', style: TextStyle(color: Theme.of(navContext).colorScheme.onSurface.withValues(alpha: 0.6))),
+          ),
+          TextButton(
+            onPressed: () async {
+              flushbar?.dismiss();
+              try {
+                await BackendService().updateOrderStatus(order.id, 'confirm');
+              } catch (e) {
+                if (kDebugMode) debugPrint('Confirm order failed: $e');
               }
             },
             child: Text('Accept', style: TextStyle(color: Theme.of(navContext).colorScheme.primary, fontWeight: FontWeight.bold)),

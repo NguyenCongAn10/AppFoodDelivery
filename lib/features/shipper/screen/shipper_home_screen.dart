@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
@@ -18,29 +20,36 @@ class ShipperHomeScreen extends StatefulWidget {
 
 class _ShipperHomeScreenState extends State<ShipperHomeScreen> {
   bool _isLoading = true;
+  bool _isFetching = false;
   String? _error;
   List<OrderModel> _orders = [];
   Position? _currentPosition;
   Map<String, dynamic>? _lastPayload;
   late OrderRealtimeProvider _realtimeProvider;
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchOrders();
-    // Save reference for safe dispose
     _realtimeProvider = context.read<OrderRealtimeProvider>();
     _realtimeProvider.subscribe();
+    // Fallback polling in case Supabase realtime events are missed
+    _pollTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      _fetchOrders(showLoading: false);
+    });
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _realtimeProvider.unsubscribe();
     super.dispose();
   }
 
   Future<void> _fetchOrders({bool showLoading = true}) async {
-    if (!mounted) return;
+    if (!mounted || _isFetching) return;
+    _isFetching = true;
     if (showLoading) {
       setState(() {
         _isLoading = true;
@@ -91,6 +100,8 @@ class _ShipperHomeScreenState extends State<ShipperHomeScreen> {
           _isLoading = false;
         });
       }
+    } finally {
+      _isFetching = false;
     }
   }
 
@@ -329,7 +340,8 @@ class _DeliveryCard extends StatelessWidget {
               Text('${order.items.length} items', style: AppTextStyle.body(context, fontSize: 13, color: AppColor.textSecondary(context))),
               const Spacer(),
               Text('Total: ', style: AppTextStyle.body(context, fontSize: 13)),
-              Text('${order.totalPrice.toStringAsFixed(0)}đ', style: AppTextStyle.bodyBold(context, fontSize: 16)),
+              Text('${order.totalPrice.toStringAsFixed(0)} VND',
+                  style: AppTextStyle.bodyBold(context, fontSize: 16)),
             ],
           ),
           const SizedBox(height: 14),

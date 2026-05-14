@@ -23,7 +23,7 @@ class BackendService {
 
   BackendService._internal();
 
-  static const String baseUrl = 'http://192.168.0.102:3000/api';
+  static const String baseUrl = 'http://54.254.237.65:3000/api';
 
   final _authRepo = AuthRepository();
 
@@ -747,7 +747,7 @@ class BackendService {
   Future<void> clearCart() async {
     try {
       final token = await _authRepo.getToken();
-      if (token == null) throw Exception('Vui lòng đăng nhập');
+      if (token == null) throw Exception('Please log in');
 
       final response = await http.delete(
         Uri.parse('$baseUrl/cart'),
@@ -755,7 +755,7 @@ class BackendService {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Lỗi xoá giỏ hàng');
+        throw Exception('Failed to clear cart');
       }
     } catch (e, stack) {
       _logError('clearCart', e, stack);
@@ -766,7 +766,7 @@ class BackendService {
   Future<List<FoodModel>> getFavorites() async {
     try {
       final token = await _authRepo.getToken();
-      if (token == null) throw Exception('Vui lòng đăng nhập');
+      if (token == null) throw Exception('Please log in');
 
       final response = await http.get(
         Uri.parse('$baseUrl/favorites'),
@@ -780,7 +780,7 @@ class BackendService {
           return FoodModel.fromJson(food);
         }).toList();
       } else {
-        throw Exception('Lỗi lấy danh sách yêu thích');
+        throw Exception('Failed to load favorites');
       }
     } catch (e, stack) {
       _logError('getFavorites', e, stack);
@@ -791,7 +791,7 @@ class BackendService {
   Future<void> toggleFavorite(int foodId) async {
     try {
       final token = await _authRepo.getToken();
-      if (token == null) throw Exception('Vui lòng đăng nhập');
+      if (token == null) throw Exception('Please log in');
 
       final response = await http.post(
         Uri.parse('$baseUrl/favorites/toggle'),
@@ -805,7 +805,7 @@ class BackendService {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Lỗi cập nhật yêu thích');
+        throw Exception('Failed to update favorites');
       }
     } catch (e, stack) {
       _logError('toggleFavorite', e, stack);

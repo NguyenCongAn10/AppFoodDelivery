@@ -87,7 +87,7 @@ class FirebaseAuthService {
       }
       return user;
     } on FirebaseAuthException catch (e) {
-      throw Exception('Lỗi tạo user: ${e.message}');
+      throw Exception('Failed to create user: ${e.message}');
     }
   }
 
@@ -118,9 +118,9 @@ class FirebaseAuthService {
     required String newPassword,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+    if (user == null) throw Exception('User is not logged in');
     final email = user.email;
-    if (email == null) throw Exception('Email người dùng không tồn tại');
+    if (email == null) throw Exception('User email does not exist');
 
     try {
       final cred = EmailAuthProvider.credential(
@@ -131,11 +131,11 @@ class FirebaseAuthService {
       await user.updatePassword(newPassword);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password') {
-        throw Exception('Mật khẩu hiện tại không đúng');
+        throw Exception('Current password is incorrect');
       } else if (e.code == 'weak-password') {
-        throw Exception('Mật khẩu mới quá yếu');
+        throw Exception('New password is too weak');
       } else {
-        throw Exception('Lỗi xác thực: ${e.message}');
+        throw Exception('Authentication error: ${e.message}');
       }
     }
   }

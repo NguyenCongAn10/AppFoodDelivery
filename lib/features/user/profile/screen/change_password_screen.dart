@@ -50,8 +50,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          title: const Text('Đổi mật khẩu thành công'),
-          content: const Text('Mật khẩu của bạn đã được cập nhật.'),
+          title: const Text('Password changed successfully'),
+          content: const Text('Your password has been updated.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(true),
@@ -68,9 +68,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       if (!mounted) return;
       final message = e is Exception
           ? e.toString().replaceFirst('Exception: ', '')
-          : 'Lỗi khi đổi mật khẩu';
+          : 'Password change failed';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đổi mật khẩu thất bại: $message')),
+        SnackBar(content: Text('Failed to change password: $message')),
       );
     } finally {
       if (mounted) {
