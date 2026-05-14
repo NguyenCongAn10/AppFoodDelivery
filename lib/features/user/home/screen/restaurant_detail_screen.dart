@@ -103,6 +103,70 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppColor.inputFill(context),
+      bottomNavigationBar: Consumer<CartProvider>(
+        builder: (context, cart, _) {
+          if (cart.items.isEmpty) return const SizedBox.shrink();
+          final total = cart.items.fold<double>(
+              0,
+              (sum, i) =>
+                  sum +
+                  (double.tryParse(i.price) ?? 0) *
+                      (double.tryParse(i.quantity) ?? 1));
+          return Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            decoration: BoxDecoration(
+              color: AppColor.container(context),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, -4)),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const MainScreen(initialIndex: 1))),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColor.primary(context),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('${cart.items.length} items',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13)),
+                  ),
+                  const Text('View Cart',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  Text('\$${total.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15)),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -147,23 +211,46 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
 
           SliverToBoxAdapter(
             child: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               color: AppColor.inputFill(context),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    restaurant.name,
-                    style: AppTextStyle.title(context, fontSize: 24),
-                  ),
+                  Text(restaurant.name,
+                      style: AppTextStyle.title(context, fontSize: 22)),
                   const SizedBox(height: 8),
+                  // Row(
+                  //   children: [
+                  //     // Icon(Icons.star_rounded,
+                  //     //     color: Colors.amber.shade600, size: 18),
+                  //     // const SizedBox(width: 4),
+                  //     // Text(restaurant.rating.toStringAsFixed(1),
+                  //     //     style: AppTextStyle.bodyBold(context, fontSize: 14)),
+                  //     // const SizedBox(width: 12),
+                  //     // Icon(Icons.place_outlined,
+                  //     //     size: 15, color: AppColor.textSecondary(context)),
+                  //     // const SizedBox(width: 4),
+                  //     Expanded(
+                  //       child: Text(restaurant.address,
+                  //           style: AppTextStyle.body(context,
+                  //               fontSize: 13,
+                  //               color: AppColor.textSecondary(context)),
+                  //           maxLines: 1,
+                  //           overflow: TextOverflow.ellipsis),
+                  //     ),
+                  //   ],
+                  // ),
                   Row(
                     children: [
-                      Icon(Icons.star, color: Colors.amber.shade600, size: 20),
+                      Icon(Icons.place_outlined, size: 15),
                       const SizedBox(width: 4),
-                      Text(
-                        restaurant.rating.toStringAsFixed(1),
-                        style: AppTextStyle.bodyBold(context, fontSize: 16),
+                      Expanded(
+                        child: Text(restaurant.address,
+                            style: AppTextStyle.body(context,
+                                fontSize: 13,
+                                color: AppColor.textSecondary(context)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
                       ),
                     ],
                   ),
@@ -241,105 +328,95 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                         );
                       },
                       child: Container(
-                        margin: const EdgeInsets.only(bottom: 16),
+                        margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: AppColor.container(context), // Background color
-                          borderRadius: BorderRadius.circular(12), // Rounded corners
+                          color: AppColor.container(context),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2)),
+                          ],
                         ),
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(12),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Food Image
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: food.imageUrl != null && food.imageUrl!.isNotEmpty
+                              child: food.imageUrl != null &&
+                                      food.imageUrl!.isNotEmpty
                                   ? CachedNetworkImage(
                                       imageUrl: food.imageUrl!,
-                                      width: 100,
-                                      height: 100,
+                                      width: 90,
+                                      height: 90,
                                       fit: BoxFit.cover,
-                                      errorWidget: (context, url, error) => Container(
-                                        width: 100,
-                                        height: 100,
-                                        color: Colors.grey.shade200,
-                                        child: const Icon(Icons.fastfood),
-                                      ),
+                                      errorWidget: (_, __, ___) =>
+                                          _foodPlaceholder(),
                                     )
-                                  : Container(
-                                      width: 100,
-                                      height: 100,
-                                      color: Colors.grey.shade200,
-                                      child: const Icon(Icons.fastfood),
-                                    ),
+                                  : _foodPlaceholder(),
                             ),
-                            const SizedBox(width: 16),
-
+                            const SizedBox(width: 14),
                             // Food Details
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    food.name,
-                                    style: AppTextStyle.bodyBold(context, fontSize: 16),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  if (food.description != null && food.description!.isNotEmpty)
-                                    Text(
-                                      food.description!,
-                                      style: AppTextStyle.body(context, 
-                                          color: AppColor.textSecondary(context),
-                                          fontSize: 13),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  const SizedBox(height: 12),
+                                  Text(food.name,
+                                      style: AppTextStyle.bodyBold(context,
+                                          fontSize: 15)),
+                                  if (food.description != null &&
+                                      food.description!.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Text(food.description!,
+                                        style: AppTextStyle.body(context,
+                                            color:
+                                                AppColor.textSecondary(context),
+                                            fontSize: 12),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis),
+                                  ],
+                                  const SizedBox(height: 10),
                                   Consumer<CartProvider>(
-                                    builder: (context, cart, child) {
+                                    builder: (context, cart, _) {
                                       final quantity = cart.getQuantity(food.id);
                                       return Row(
                                         children: [
-                                          Expanded(
-                                            child: Text(
-                                              '\$ ${food.price.toStringAsFixed(0)}',
-                                              style: AppTextStyle.accent(context,
-                                                  fontSize: 16),
-                                            ),
+                                          Text(
+                                            '\$${food.price.toStringAsFixed(0)}',
+                                            style: AppTextStyle.accent(context,
+                                                fontSize: 15),
                                           ),
+                                          const Spacer(),
                                           if (quantity > 0) ...[
-                                            GestureDetector(
-                                              onTap: () => cart.removeFood(food.id),
-                                              child: Container(
-                                                padding: const EdgeInsets.all(4),
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  border: Border.all(
-                                                    color: AppColor.primary(context),
-                                                  ),
-                                                ),
-                                                child: Icon(
-                                                  Icons.remove,
-                                                  size: 20,
-                                                  color: AppColor.primary(context),
-                                                ),
-                                              ),
+                                            _cartButton(
+                                              icon: Icons.remove,
+                                              color: AppColor.primary(context),
+                                              onTap: () =>
+                                                  cart.removeFood(food.id),
                                             ),
-                                            const SizedBox(width: 12),
-                                            Text(
-                                              quantity.toString(),
-                                              style: AppTextStyle.bodyBold(context, fontSize: 16),
-                                            ),
-                                            const SizedBox(width: 12),
+                                            const SizedBox(width: 10),
+                                            Text(quantity.toString(),
+                                                style: AppTextStyle.bodyBold(
+                                                    context,
+                                                    fontSize: 15)),
+                                            const SizedBox(width: 10),
                                           ],
-                                          GestureDetector(
+                                          _cartButton(
+                                            icon: Icons.add,
+                                            color: AppColor.primary(context),
+                                            filled: true,
                                             onTap: () {
                                               if (food.optionGroups.isNotEmpty) {
                                                 showModalBottomSheet(
                                                   context: context,
                                                   isScrollControlled: true,
-                                                  backgroundColor: Colors.transparent,
-                                                  builder: (context) => FoodOptionsBottomSheet(
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                  builder: (_) =>
+                                                      FoodOptionsBottomSheet(
                                                     food: food,
                                                     restaurantId: restaurant.id,
                                                   ),
@@ -348,20 +425,6 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                                               }
                                               cart.addFood(food, restaurant.id);
                                             },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(4),
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                  color: AppColor.primary(context),
-                                                ),
-                                              ),
-                                              child: Icon(
-                                                Icons.add,
-                                                size: 20,
-                                                color: AppColor.primary(context),
-                                              ),
-                                            ),
                                           ),
                                         ],
                                       );
@@ -394,6 +457,35 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
       ),
     );
   }
+}
+
+Widget _foodPlaceholder() => Container(
+      width: 90,
+      height: 90,
+      color: Colors.grey.shade200,
+      child:
+          Icon(Icons.fastfood_rounded, color: Colors.grey.shade400, size: 32),
+    );
+
+Widget _cartButton({
+  required IconData icon,
+  required Color color,
+  required VoidCallback onTap,
+  bool filled = false,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: filled ? color : Colors.transparent,
+        border: Border.all(color: color, width: 1.5),
+      ),
+      child: Icon(icon, size: 18, color: filled ? Colors.white : color),
+    ),
+  );
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {

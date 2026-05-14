@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/providers/theme_provider.dart';
+import 'package:delivery_apps/core/services/supabase_service.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/core/widgets/round_icon_button.dart';
 import 'package:delivery_apps/core/services/firebase_auth_service.dart';
@@ -16,6 +19,7 @@ import 'package:delivery_apps/features/user/profile/screen/shipper_registration_
 import 'package:delivery_apps/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,6 +30,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   UserModel? user;
+  bool _uploadingAvatar = false;
 
   @override
   void initState() {
@@ -49,6 +54,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) setState(() => user = currentUser);
     } catch (e) {
       // Fallback already handled in initState
+    }
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final picker = ImagePicker();
+    final picked =
+        await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (picked == null || user == null) return;
+
+    setState(() => _uploadingAvatar = true);
+    try {
+      final file = File(picked.path);
+      final fileName = '${user!.uid}_avatar.jpg';
+      final url =
+          await SupabaseService.uploadImage(file, fileName, folder: 'users');
+      if (url == null) throw Exception('Upload failed');
+
+      final updated =
+          await BackendService().updateUser(user!.uid, avatarUrl: url);
+      if (mounted) setState(() => user = updated);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Failed to update avatar: $e'),
+              backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingAvatar = false);
     }
   }
 
@@ -98,32 +133,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            width: media.width * 0.35,
-                            height: media.width * 0.35,
-                            decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.circular(media.width * 0.175),
-                              color: AppColor.container(context),
-                            ),
-                            child: ClipOval(
-                              child: user?.avatarUrl != null &&
-                                      user!.avatarUrl!.isNotEmpty
-                                  ? CachedNetworkImage(
-                                      imageUrl: user!.avatarUrl!,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                      placeholder: (context, url) =>
-                                          CircularProgressIndicator(),
-                                      errorWidget: (context, url, error) =>
-                                          Icon(Icons.error),
-                                    )
-                                  : Image.asset("assets/image/avata.jpg",
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity),
+                          GestureDetector(
+                            onTap:
+                                _uploadingAvatar ? null : _pickAndUploadAvatar,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  width: media.width * 0.35,
+                                  height: media.width * 0.35,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(
+                                        media.width * 0.175),
+                                    color: AppColor.container(context),
+                                  ),
+                                  child: ClipOval(
+                                    child: _uploadingAvatar
+                                        ? const Center(
+                                            child: CircularProgressIndicator())
+                                        : (user?.avatarUrl != null &&
+                                                user!.avatarUrl!.isNotEmpty
+                                            ? CachedNetworkImage(
+                                                imageUrl: user!.avatarUrl!,
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                                height: double.infinity,
+                                                placeholder: (_, __) =>
+                                                    const Center(
+                                                        child:
+                                                            CircularProgressIndicator()),
+                                                errorWidget: (_, __, ___) =>
+                                                    Image.asset(
+                                                        "assets/image/avata.jpg",
+                                                        fit: BoxFit.cover),
+                                              )
+                                            : Image.asset(
+                                                "assets/image/avata.jpg",
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                                height: double.infinity)),
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 12,
+                                  right: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: AppColor.primary(context),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                          color: AppColor.container(context),
+                                          width: 2),
+                                    ),
+                                    child: const Icon(Icons.camera_alt,
+                                        color: Colors.white, size: 14),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         Text(

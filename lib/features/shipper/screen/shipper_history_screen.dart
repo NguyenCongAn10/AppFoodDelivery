@@ -241,7 +241,7 @@ class _HistoryCard extends StatelessWidget {
             children: [
               Text(timeStr, style: AppTextStyle.body(context, fontSize: 12, color: AppColor.textSecondary(context))),
               const Spacer(),
-              Text('${order.totalPrice.toStringAsFixed(0)} VND', style: AppTextStyle.bodyBold(context, fontSize: 15, color: isCompleted ? Colors.green : Colors.red)),
+              Text('${order.totalPrice.toStringAsFixed(0)} \$', style: AppTextStyle.bodyBold(context, fontSize: 15, color: isCompleted ? Colors.green : Colors.red)),
             ],
           )
         ],

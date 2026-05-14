@@ -14,9 +14,9 @@ class SupabaseService {
 
   static SupabaseClient get client => Supabase.instance.client;
 
-  static Future<String?> uploadImage(File file, String fileName) async {
+  static Future<String?> uploadImage(File file, String fileName, {String folder = 'foods'}) async {
     try {
-      final String path = 'foods/${DateTime.now().millisecondsSinceEpoch}_$fileName';
+      final String path = '$folder/${DateTime.now().millisecondsSinceEpoch}_$fileName';
       
       await client.storage.from(_bucketName).upload(
         path,

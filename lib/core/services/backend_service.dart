@@ -522,6 +522,7 @@ class BackendService {
     String? email,
     String? phone,
     String? role,
+    String? avatarUrl,
   }) async {
     try {
       final data = <String, dynamic>{
@@ -529,6 +530,7 @@ class BackendService {
         if (email != null) 'email': email,
         if (phone != null) 'phone': phone,
         if (role != null) 'role': role,
+        if (avatarUrl != null) 'avatar_url': avatarUrl,
       };
 
       final response = await http.put(
@@ -976,6 +978,7 @@ class BackendService {
     String? phone,
     double? latitude,
     double? longitude,
+    String? imageUrl,
   }) async {
     try {
       final Map<String, dynamic> data = {};
@@ -984,6 +987,7 @@ class BackendService {
       if (phone != null) data['phone'] = phone;
       if (latitude != null) data['latitude'] = latitude;
       if (longitude != null) data['longitude'] = longitude;
+      if (imageUrl != null) data['image_url'] = imageUrl;
 
       final response = await http.patch(
         Uri.parse('$baseUrl/restaurants/me'),

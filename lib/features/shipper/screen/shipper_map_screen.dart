@@ -237,7 +237,10 @@ class _ShipperMapScreenState extends State<ShipperMapScreen> {
                           child: Text('#${widget.order.id.toString().padLeft(4, '0')}', style: AppTextStyle.bodyBold(context, color: AppColor.primary(context), fontSize: 13)),
                         ),
                         const Spacer(),
-                        Text(widget.order.paymentMethod?.toLowerCase() == 'cash' ? 'Collect: ${widget.order.totalPrice.toStringAsFixed(0)} VND' : 'Paid',
+                        Text(
+                            widget.order.paymentMethod?.toLowerCase() == 'cash'
+                                ? 'Collect: ${widget.order.totalPrice.toStringAsFixed(0)} \$'
+                                : 'Paid',
                           style: AppTextStyle.bodyBold(context, color: widget.order.paymentMethod?.toLowerCase() == 'cash' ? Colors.red : Colors.green, fontSize: 14)),
                       ],
                     ),

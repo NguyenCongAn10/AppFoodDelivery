@@ -1,11 +1,16 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/restaurant_model.dart';
 import 'package:delivery_apps/core/models/user_model.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
+import 'package:delivery_apps/core/services/supabase_service.dart';
 import 'package:delivery_apps/features/user/profile/screen/login_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class RestaurantProfileScreen extends StatefulWidget {
   final UserModel user;
@@ -19,6 +24,7 @@ class RestaurantProfileScreen extends StatefulWidget {
 
 class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
   bool _isLoading = true;
+  bool _uploadingImage = false;
   RestaurantModel? _restaurant;
   final BackendService _backendService = BackendService();
 
@@ -67,6 +73,36 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
     }
   }
 
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final picked =
+        await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (picked == null || _restaurant == null) return;
+
+    setState(() => _uploadingImage = true);
+    try {
+      final file = File(picked.path);
+      final fileName = 'restaurant_${_restaurant!.id}.jpg';
+      final url = await SupabaseService.uploadImage(file, fileName,
+          folder: 'restaurants');
+      if (url == null) throw Exception('Upload failed');
+
+      final updated =
+          await _backendService.updateRestaurantProfile(imageUrl: url);
+      if (mounted) setState(() => _restaurant = updated);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Failed to upload image: $e'),
+              backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingImage = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,29 +124,59 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                   const SizedBox(height: 8),
                   // Avatar
                   Center(
-                    child: Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 52,
-                          backgroundColor:
-                              AppColor.primary(context).withValues(alpha: 0.15),
-                          child: Icon(Icons.storefront_rounded,
-                              size: 50, color: AppColor.primary(context)),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppColor.primary(context),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.camera_alt_rounded,
-                                color: Colors.white, size: 16),
+                    child: GestureDetector(
+                      onTap: _uploadingImage ? null : _pickAndUploadImage,
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 52,
+                            backgroundColor: AppColor.primary(context)
+                                .withValues(alpha: 0.15),
+                            child: _uploadingImage
+                                ? const SizedBox(
+                                    width: 36,
+                                    height: 36,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 3),
+                                  )
+                                : (_restaurant?.imageUrl != null &&
+                                        _restaurant!.imageUrl!.isNotEmpty
+                                    ? ClipOval(
+                                        child: CachedNetworkImage(
+                                          imageUrl: _restaurant!.imageUrl!,
+                                          width: 104,
+                                          height: 104,
+                                          fit: BoxFit.cover,
+                                          placeholder: (_, __) =>
+                                              const CircularProgressIndicator(),
+                                          errorWidget: (_, __, ___) => Icon(
+                                              Icons.storefront_rounded,
+                                              size: 50,
+                                              color: AppColor.primary(context)),
+                                        ),
+                                      )
+                                    : Icon(Icons.storefront_rounded,
+                                        size: 50,
+                                        color: AppColor.primary(context))),
                           ),
-                        ),
-                      ],
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppColor.primary(context),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                    color: AppColor.inputFill(context),
+                                    width: 2),
+                              ),
+                              child: const Icon(Icons.camera_alt_rounded,
+                                  color: Colors.white, size: 16),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),

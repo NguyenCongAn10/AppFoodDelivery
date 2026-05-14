@@ -471,21 +471,20 @@ Widget restaurantResultCard(
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(
-                          Icons.star,
-                          size: 16,
-                          color: Colors.amber.shade600,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          item.rating.toStringAsFixed(1),
-                          style: AppTextStyle.body(
-                            context,
-                            color: AppColor.textBody(context),
-                          ),
-                        ),
+                        // Icon(
+                        //   Icons.star,
+                        //   size: 16,
+                        //   color: Colors.amber.shade600,
+                        // ),
+                        // const SizedBox(width: 4),
+                        // Text(
+                        //   item.rating.toStringAsFixed(1),
+                        //   style: AppTextStyle.body(
+                        //     context,
+                        //     color: AppColor.textBody(context),
+                        //   ),
+                        // ),
                         if (item.ratingCount > 0) ...[
-                          const SizedBox(width: 4),
                           Text(
                             '(${item.ratingCount})',
                             style: AppTextStyle.body(
@@ -496,7 +495,6 @@ Widget restaurantResultCard(
                           ),
                         ],
                         if (distanceText != null) ...[
-                          const SizedBox(width: 10),
                           const Icon(
                             Icons.location_on,
                             size: 16,

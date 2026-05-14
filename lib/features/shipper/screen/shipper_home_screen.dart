@@ -340,7 +340,7 @@ class _DeliveryCard extends StatelessWidget {
               Text('${order.items.length} items', style: AppTextStyle.body(context, fontSize: 13, color: AppColor.textSecondary(context))),
               const Spacer(),
               Text('Total: ', style: AppTextStyle.body(context, fontSize: 13)),
-              Text('${order.totalPrice.toStringAsFixed(0)} VND',
+              Text('${order.totalPrice.toStringAsFixed(0)} \$',
                   style: AppTextStyle.bodyBold(context, fontSize: 16)),
             ],
           ),

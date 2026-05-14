@@ -1,3 +1,4 @@
+import 'package:url_launcher/url_launcher.dart';
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
@@ -35,8 +36,11 @@ class _ShipperActiveScreenState extends State<ShipperActiveScreen> {
       
       if (mounted) {
         setState(() {
-          // Lọc ra những đơn đang giao (DELIVERING) hoặc chờ lấy (CONFIRMED)
-          _orders = allAssigned.where((o) => o.status == OrderStatus.DELIVERING || o.status == OrderStatus.CONFIRMED).toList();
+          _orders = allAssigned.where((o) =>
+            o.status == OrderStatus.PENDING ||
+            o.status == OrderStatus.CONFIRMED ||
+            o.status == OrderStatus.DELIVERING
+          ).toList();
           _isLoading = false;
         });
       }
@@ -292,10 +296,15 @@ class _ActiveDeliveryCard extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton( // Nút gọi điện
+              IconButton(
                  icon: const Icon(Icons.phone, color: Colors.green),
-                 onPressed: () {
-                    // Cần cài thêm url_launcher nếu muốn gọi điện thực tế
+                onPressed: () async {
+                  final phone = order.user?.phone;
+                  if (phone == null || phone.isEmpty) return;
+                  final uri = Uri(scheme: 'tel', path: phone);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri);
+                  }
                  },
               )
             ],
@@ -310,7 +319,7 @@ class _ActiveDeliveryCard extends StatelessWidget {
               Text('Collect: ', style: AppTextStyle.body(context, fontSize: 13, color: AppColor.textSecondary(context))),
               Text(
                 order.paymentMethod?.toLowerCase() == 'cash' 
-                  ? '${order.totalPrice.toStringAsFixed(0)} VND'
+                      ? '${order.totalPrice.toStringAsFixed(0)} \$'
                   : 'Paid', 
                 style: AppTextStyle.bodyBold(context, fontSize: 16, color: order.paymentMethod?.toLowerCase() == 'cash' ? Colors.red : Colors.green)
               ),

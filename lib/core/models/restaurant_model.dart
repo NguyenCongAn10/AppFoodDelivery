@@ -10,6 +10,7 @@ class RestaurantModel {
   final double rating;
   final int ratingCount;
   final String? phone;
+  final String? imageUrl;
   final bool isOpen;
   final DateTime createdAt;
   final List<FoodModel>? foods;
@@ -23,6 +24,7 @@ class RestaurantModel {
     required this.rating,
     required this.ratingCount,
     this.phone,
+    this.imageUrl,
     required this.isOpen,
     required this.createdAt,
     this.foods,
@@ -45,6 +47,7 @@ class RestaurantModel {
           : (json['rating'] as num?)?.toDouble() ?? 0.0,
       ratingCount: json['rating_count'] ?? 0,
       phone: json['phone'],
+      imageUrl: json['image_url'],
       isOpen: json['is_open'] ?? true,
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
       foods: (json['foods'] as List<dynamic>?)

@@ -245,7 +245,7 @@ class _ProductViewState extends State<ProductDetailPage> {
             ],
           ),
           Positioned(
-            bottom: 20,
+            bottom: 40,
             left: 10,
             right: 10,
             child: Consumer<CartProvider>(builder: (context, cart, child) {

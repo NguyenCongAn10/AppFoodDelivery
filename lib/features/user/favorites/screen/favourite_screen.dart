@@ -78,7 +78,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                                 gridDelegate:
                                     const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 2,
-                                  childAspectRatio: 1,
+                                  childAspectRatio: 0.8,
                                   crossAxisSpacing: 8,
                                   mainAxisSpacing: 8,
                                 ),
@@ -163,25 +163,32 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                                               child: Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Text(product.name,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                       style:
                                                           AppTextStyle.bodyBold(
                                                               context,
-                                                              fontSize: 15,
+                                                              fontSize: 13,
                                                               color: AppColor
                                                                   .textTitle(
                                                                       context))),
-                                                  const SizedBox(height: 4),
                                                   if (product.restaurantName !=
                                                       null)
                                                     Text(
                                                         product.restaurantName!,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
                                                         style:
                                                             AppTextStyle.body(
                                                           context,
-                                                          fontSize: 13,
+                                                          fontSize: 11,
                                                         )),
+                                                  const Spacer(),
                                                   Row(
                                                     mainAxisAlignment:
                                                         MainAxisAlignment
@@ -256,6 +263,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                                                       ),
                                                     ],
                                                   ),
+                                                  const SizedBox(height: 8),
                                                 ],
                                               ),
                                             ),
