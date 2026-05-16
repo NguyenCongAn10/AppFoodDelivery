@@ -1,5 +1,6 @@
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/common/app_text_style.dart';
+import 'package:delivery_apps/core/widgets/app_toast.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/core/widgets/round_button.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
@@ -32,12 +33,9 @@ class _CartScreenState extends State<CartScreen> {
     final restaurantId = cart.items.first.restaurantId;
     final restaurantIdInt = int.tryParse(restaurantId) ?? 0;
     if (restaurantIdInt == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              'Cannot checkout: restaurant info missing. Please re-add items.'),
-          backgroundColor: Colors.red,
-        ),
+      AppToast.error(
+        context,
+        'Missing restaurant info. Please re-add items to your cart.',
       );
       return;
     }
@@ -71,12 +69,7 @@ class _CartScreenState extends State<CartScreen> {
       await cart.clearCart();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order placed successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppToast.success(context, 'Order placed successfully!');
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
               builder: (context) => const MainScreen(
@@ -85,8 +78,9 @@ class _CartScreenState extends State<CartScreen> {
         );
       }
     } catch (e) {
+      if (kDebugMode) debugPrint("Checkout error: $e");
       if (mounted) {
-        if (kDebugMode) debugPrint("Checkout error: $e");
+        AppToast.error(context, 'Could not place order. Please try again.');
       }
     } finally {
       if (mounted) setState(() => _isCheckingOut = false);
@@ -489,13 +483,9 @@ class _CartScreenState extends State<CartScreen> {
                                             if (addressProvider
                                                     .selectedAddress ==
                                                 null) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                      'Please select a delivery address first'),
-                                                  backgroundColor: Colors.red,
-                                                ),
+                                              AppToast.warning(
+                                                context,
+                                                'Please select a delivery address first.',
                                               );
                                               return;
                                             }
@@ -505,11 +495,9 @@ class _CartScreenState extends State<CartScreen> {
                                               final user = await BackendService().getMe();
                                               if (user.phone == null || user.phone!.trim().isEmpty) {
                                                 if (mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text("Please add your phone number to proceed with delivery"),
-                                                      backgroundColor: Colors.orange,
-                                                    ),
+                                                  AppToast.warning(
+                                                    context,
+                                                    'Please add your phone number to proceed with delivery.',
                                                   );
                                                   Navigator.push(
                                                     context,
@@ -533,9 +521,11 @@ class _CartScreenState extends State<CartScreen> {
                                                 ),
                                               );
                                             } catch (e) {
+                                              if (kDebugMode) debugPrint('Profile check error: $e');
                                               if (!context.mounted) return;
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text("Error checking profile: $e"), backgroundColor: Colors.red),
+                                              AppToast.error(
+                                                context,
+                                                'Could not verify your profile. Please try again.',
                                               );
                                             }
                                           },

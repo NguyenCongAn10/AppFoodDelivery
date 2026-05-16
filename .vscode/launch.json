@@ -10,7 +10,17 @@
             "request": "launch",
             "type": "dart"
         },
-    
-       
+        {
+            "name": "delivery_apps (profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "delivery_apps (release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
     ]
 }

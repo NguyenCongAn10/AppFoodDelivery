@@ -3,6 +3,7 @@ import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
+import 'package:delivery_apps/core/widgets/app_toast.dart';
 import 'package:delivery_apps/features/shipper/screen/shipper_map_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -66,22 +67,16 @@ class _ShipperActiveScreenState extends State<ShipperActiveScreen> {
       
       if (mounted) {
         Navigator.pop(context); // Tắt loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order completed!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppToast.success(context, 'Order completed!');
         _fetchActiveOrders(); // Load lại danh sách
       }
     } catch (e) {
+      debugPrint('Complete order error: $e');
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString().replaceAll("Exception: ", "")}'),
-            backgroundColor: Colors.red,
-          ),
+        AppToast.error(
+          context,
+          'Could not complete order. Please try again.',
         );
       }
     }

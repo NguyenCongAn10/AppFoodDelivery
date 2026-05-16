@@ -4,6 +4,7 @@ import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/cart_item.dart';
 import 'package:delivery_apps/core/models/food_model.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
+import 'package:delivery_apps/core/widgets/app_toast.dart';
 
 import 'package:delivery_apps/features/user/favorites/provider/favorite_provider.dart';
 import 'package:delivery_apps/features/user/home/screen/product_detail_page.dart';
@@ -272,26 +273,20 @@ class _ProductHomeState extends State<ProductHome> {
                                                       .read<CartProvider>();
                                                   await cart.addFood(
                                                       food, food.restaurantId);
-                                                  
-                                                  if (mounted) {
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      const SnackBar(
-                                                          content: Text(
-                                                              "Added to cart")),
-                                                    );
+
+                                                  if (context.mounted) {
+                                                    AppToast.success(
+                                                        context, 'Added to cart');
                                                   }
                                                 } catch (e) {
-                                                  if (mounted) {
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      SnackBar(
-                                                          content:
-                                                              Text("Error: $e"),
-                                                          backgroundColor:
-                                                              Colors.red),
+                                                  if (kDebugMode) {
+                                                    debugPrint(
+                                                        'Add to cart error: $e');
+                                                  }
+                                                  if (context.mounted) {
+                                                    AppToast.error(
+                                                      context,
+                                                      'Could not add item to cart. Please try again.',
                                                     );
                                                   }
                                                 }

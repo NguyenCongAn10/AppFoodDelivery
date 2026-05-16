@@ -110,7 +110,7 @@ export const getAvailableOrders = async (req, res) => {
         const MAX_DISTANCE_KM = 15;
 
         const orders = await prisma.orders.findMany({
-            where: { status: 'PENDING', shipper_id: null },
+            where: { status: 'CONFIRMED', shipper_id: null },
             include: {
                 restaurants: true,
                 users: true,

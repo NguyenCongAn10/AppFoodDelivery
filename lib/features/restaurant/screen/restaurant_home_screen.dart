@@ -3,6 +3,7 @@ import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
 import 'package:delivery_apps/core/models/restaurant_model.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
+import 'package:delivery_apps/core/widgets/app_toast.dart';
 import 'package:delivery_apps/features/restaurant/widget/order_action_bottom_sheet.dart';
 import 'package:delivery_apps/features/restaurant/widget/restaurant_order_card.dart';
 import 'package:delivery_apps/features/restaurant/widget/restaurant_summary_card.dart';
@@ -83,17 +84,17 @@ class _RestaurantHomeScreenState extends State<RestaurantHomeScreen> {
       _fetchData(); // Simplest way to sync state
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Order #${order.id.toString().padLeft(4, '0')} updated')),
+        AppToast.success(
+          context,
+          'Order #${order.id.toString().padLeft(4, '0')} updated.',
         );
       }
     } catch (e) {
       debugPrint('Error updating order status: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update order status')),
+        AppToast.error(
+          context,
+          'Failed to update order status. Please try again.',
         );
       }
     }

@@ -1,6 +1,7 @@
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/providers/order_realtime_provider.dart';
+import 'package:delivery_apps/core/widgets/app_toast.dart';
 import 'package:delivery_apps/features/restaurant/widget/order_action_bottom_sheet.dart';
 import 'package:delivery_apps/features/restaurant/widget/restaurant_order_card.dart';
 import 'package:flutter/material.dart';
@@ -50,9 +51,7 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> with Si
       if (!mounted) return;
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load orders')),
-        );
+        AppToast.error(context, 'Failed to load orders. Please try again.');
       }
     }
   }
@@ -66,9 +65,7 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> with Si
     } catch (e) {
       debugPrint('Error updating order: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update order')),
-        );
+        AppToast.error(context, 'Failed to update order. Please try again.');
       }
     }
   }

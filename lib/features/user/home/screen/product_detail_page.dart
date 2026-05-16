@@ -1,6 +1,7 @@
 import 'package:delivery_apps/core/common/app_text_style.dart';
 import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/food_model.dart';
+import 'package:delivery_apps/core/widgets/app_toast.dart';
 import 'package:delivery_apps/core/widgets/top_background_clipper.dart';
 import 'package:delivery_apps/core/widgets/round_icon_circle.dart';
 import 'package:delivery_apps/features/user/cart/provider/cart_provider.dart';
@@ -326,11 +327,11 @@ class _ProductViewState extends State<ProductDetailPage> {
                             ),
                           );
                         } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text('Error: $e'),
-                                  backgroundColor: Colors.red),
+                          debugPrint('Add to cart error: $e');
+                          if (context.mounted) {
+                            AppToast.error(
+                              context,
+                              'Could not add item to cart. Please try again.',
                             );
                           }
                         }

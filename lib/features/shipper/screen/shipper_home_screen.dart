@@ -5,6 +5,7 @@ import 'package:delivery_apps/core/common/color_extension.dart';
 import 'package:delivery_apps/core/models/order_model.dart';
 import 'package:delivery_apps/core/providers/order_realtime_provider.dart';
 import 'package:delivery_apps/core/services/backend_service.dart';
+import 'package:delivery_apps/core/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
@@ -120,24 +121,18 @@ class _ShipperHomeScreenState extends State<ShipperHomeScreen> {
         Navigator.pop(context); // Tắt loading dialog
         _fetchOrders(); // Refresh the list so it doesn't show up again
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order accepted successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppToast.success(context, 'Order accepted successfully!');
 
         // Chuyển sang tab Active (callback)
         widget.onAcceptOrder?.call();
       }
     } catch (e) {
+      debugPrint('Accept order error: $e');
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error accepting order: ${e.toString().replaceAll("Exception: ", "")}'),
-            backgroundColor: Colors.red,
-          ),
+        AppToast.error(
+          context,
+          'Could not accept order. Please try again.',
         );
       }
     }
